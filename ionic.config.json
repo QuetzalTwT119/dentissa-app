@@ -1,0 +1,7 @@
+{
+  "name": "Dentissa App",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}
