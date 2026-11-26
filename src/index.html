@@ -19,7 +19,30 @@
     <!-- add to homescreen for ios -->
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-  </head>
+    <script>
+    if (!Object.hasOwn) {
+      Object.hasOwn = function (obj, prop) {
+        return Object.prototype.hasOwnProperty.call(obj, prop);
+      };
+    }
+    if (!Array.prototype.at) {
+      Array.prototype.at = function (n) {
+        n = Math.trunc(n) || 0;
+        if (n < 0) n += this.length;
+        if (n < 0 || n >= this.length) return undefined;
+        return this[n];
+      };
+    }
+    if (!String.prototype.at) {
+      String.prototype.at = function (n) {
+        n = Math.trunc(n) || 0;
+        if (n < 0) n += this.length;
+        if (n < 0 || n >= this.length) return undefined;
+        return this[n];
+      };
+    }
+  </script>
+</head>
 
   <body>
     <app-root></app-root>

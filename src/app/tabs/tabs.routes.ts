@@ -1,34 +1,44 @@
-import type { Routes } from '@angular/router';
-
+﻿import { Routes } from '@angular/router';
 import { TabsPage } from './tabs.page';
 
 export const routes: Routes = [
   {
-    path: 'tabs',
+    path: '',
     component: TabsPage,
     children: [
       {
-        path: 'tab1',
-        loadComponent: () => import('../tab1/tab1.page').then((m) => m.Tab1Page),
+        path: 'dashboard',
+        loadComponent: () =>
+          import('../pages/dashboard/dashboard.page').then(
+            (m) => m.DashboardPage
+          ),
       },
       {
-        path: 'tab2',
-        loadComponent: () => import('../tab2/tab2.page').then((m) => m.Tab2Page),
+        path: 'acceso-qr',
+        loadComponent: () =>
+          import('../pages/acceso-qr/acceso-qr.page').then(
+            (m) => m.AccesoQrPage
+          ),
       },
       {
-        path: 'tab3',
-        loadComponent: () => import('../tab3/tab3.page').then((m) => m.Tab3Page),
+        path: 'control-manual',
+        loadComponent: () =>
+          import('../pages/control-manual/control-manual.page').then(
+            (m) => m.ControlManualPage
+          ),
+      },
+      {
+        path: 'auditoria',
+        loadComponent: () =>
+          import('../pages/auditoria/auditoria.page').then(
+            (m) => m.AuditoriaPage
+          ),
       },
       {
         path: '',
-        redirectTo: '/tabs/tab1',
+        redirectTo: '/tabs/dashboard',
         pathMatch: 'full',
       },
     ],
-  },
-  {
-    path: '',
-    redirectTo: '/tabs/tab1',
-    pathMatch: 'full',
   },
 ];
