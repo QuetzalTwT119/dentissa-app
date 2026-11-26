@@ -1,0 +1,4905 @@
+﻿
+========================================
+ARCHIVO: src\global.scss
+========================================
+@import "@ionic/angular/css/core.css";
+@import "@ionic/angular/css/normalize.css";
+@import "@ionic/angular/css/structure.css";
+@import "@ionic/angular/css/typography.css";
+@import "@ionic/angular/css/display.css";
+@import "@ionic/angular/css/padding.css";
+@import "@ionic/angular/css/float-elements.css";
+@import "@ionic/angular/css/text-alignment.css";
+@import "@ionic/angular/css/text-transformation.css";
+@import "@ionic/angular/css/flex-utils.css";
+
+body {
+  background-color: #fdf7f6;
+  color: #261c1e;
+}
+
+ion-content {
+  --background: #fdf7f6;
+  --color: #261c1e;
+}
+
+ion-toolbar {
+  --background: #a83256;
+  --color: #ffffff;
+}
+
+ion-tab-bar {
+  --background: #ffffff;
+  --border: 1px solid #ead4d8;
+}
+
+ion-tab-button {
+  --color: #6e5c60;
+  --color-selected: #a83256;
+}
+
+
+========================================
+ARCHIVO: src\index.html
+========================================
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Ionic App</title>
+
+    <base href="/" />
+
+    <meta name="color-scheme" content="light dark" />
+    <meta
+      name="viewport"
+      content="viewport-fit=cover, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="msapplication-tap-highlight" content="no" />
+
+    <link rel="icon" type="image/png" href="assets/icon/favicon.png" />
+
+    <!-- add to homescreen for ios -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <script>
+    if (!Object.hasOwn) {
+      Object.hasOwn = function (obj, prop) {
+        return Object.prototype.hasOwnProperty.call(obj, prop);
+      };
+    }
+    if (!Array.prototype.at) {
+      Array.prototype.at = function (n) {
+        n = Math.trunc(n) || 0;
+        if (n < 0) n += this.length;
+        if (n < 0 || n >= this.length) return undefined;
+        return this[n];
+      };
+    }
+    if (!String.prototype.at) {
+      String.prototype.at = function (n) {
+        n = Math.trunc(n) || 0;
+        if (n < 0) n += this.length;
+        if (n < 0 || n >= this.length) return undefined;
+        return this[n];
+      };
+    }
+  </script>
+</head>
+
+  <body>
+    <app-root></app-root>
+  </body>
+</html>
+
+
+
+========================================
+ARCHIVO: src\main.ts
+========================================
+import { bootstrapApplication } from '@angular/platform-browser';
+import {
+  RouteReuseStrategy,
+  provideRouter,
+  withComponentInputBinding,
+  withPreloading,
+  PreloadAllModules,
+} from '@angular/router';
+import { IonicRouteStrategy, provideIonicAngular } from '@ionic/angular/standalone';
+
+import { AppComponent } from './app/app.component';
+import { routes } from './app/app.routes';
+
+bootstrapApplication(AppComponent, {
+  providers: [
+    { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
+    provideIonicAngular(),
+    provideRouter(routes, withPreloading(PreloadAllModules), withComponentInputBinding()),
+  ],
+});
+
+
+
+========================================
+ARCHIVO: src\test-setup.ts
+========================================
+// Polyfills for running unit tests under jsdom (the default Vitest environment).
+// Ionic components such as ion-menu and ion-split-pane query `window.matchMedia`,
+// which jsdom does not implement.
+if (!window.matchMedia) {
+  window.matchMedia = (query: string): MediaQueryList =>
+    ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: () => undefined,
+      removeListener: () => undefined,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+      dispatchEvent: () => false,
+    }) as MediaQueryList;
+}
+
+
+
+========================================
+ARCHIVO: src\app\app.component.html
+========================================
+<ion-app>
+  <ion-router-outlet></ion-router-outlet>
+</ion-app>
+
+
+
+========================================
+ARCHIVO: src\app\app.component.scss
+========================================
+
+
+========================================
+ARCHIVO: src\app\app.component.spec.ts
+========================================
+import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+
+import { AppComponent } from './app.component';
+
+describe('AppComponent', () => {
+  it('should create the app', async () => {
+    await TestBed.configureTestingModule({
+      imports: [AppComponent],
+      providers: [provideRouter([])],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(AppComponent);
+    const app = fixture.componentInstance;
+    expect(app).toBeTruthy();
+  });
+});
+
+
+
+========================================
+ARCHIVO: src\app\app.component.ts
+========================================
+import { Component } from '@angular/core';
+import { IonApp, IonRouterOutlet } from '@ionic/angular/standalone';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: 'app.component.html',
+  imports: [IonApp, IonRouterOutlet],
+})
+export class AppComponent {
+  constructor() {}
+}
+
+
+
+========================================
+ARCHIVO: src\app\app.routes.ts
+========================================
+import { Routes } from '@angular/router';
+import { authGuard, roleGuard } from './core/guards/auth.guard';
+
+export const routes: Routes = [
+  {
+    path: '',
+    redirectTo: 'tabs/sala',
+    pathMatch: 'full',
+  },
+  {
+    path: 'login',
+    loadComponent: () =>
+      import('./pages/login/login.page').then((m) => m.LoginPage),
+  },
+  {
+    path: 'tabs',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/tabs/tabs.page').then((m) => m.TabsPage),
+    children: [
+      {
+        path: 'sala',
+        data: { vista: 'plano' },
+        loadComponent: () =>
+          import('./pages/sala/sala.page').then((m) => m.SalaPage),
+      },
+      {
+        path: 'qr',
+        loadComponent: () =>
+          import('./pages/qr-acceso/qr-acceso.page').then((m) => m.QrAccesoPage),
+      },
+      {
+        path: 'estadisticas',
+        canActivate: [roleGuard(['super_admin'])],
+        data: { vista: 'stats' },
+        loadComponent: () =>
+          import('./pages/sala/sala.page').then((m) => m.SalaPage),
+      },
+      {
+        path: 'auditoria',
+        canActivate: [roleGuard(['super_admin'])],
+        data: { vista: 'auditoria' },
+        loadComponent: () =>
+          import('./pages/sala/sala.page').then((m) => m.SalaPage),
+      },
+      {
+        path: '',
+        redirectTo: 'sala',
+        pathMatch: 'full',
+      },
+    ],
+  },
+  {
+    path: '**',
+    redirectTo: 'tabs/sala',
+  },
+];
+
+
+========================================
+ARCHIVO: src\app\components\control-actuador\control-actuador.component.html
+========================================
+<p>control-actuador works!</p>
+
+
+
+========================================
+ARCHIVO: src\app\components\control-actuador\control-actuador.component.scss
+========================================
+
+
+========================================
+ARCHIVO: src\app\components\control-actuador\control-actuador.component.spec.ts
+========================================
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+
+import { ControlActuadorComponent } from './control-actuador.component';
+
+describe('ControlActuadorComponent', () => {
+  let component: ControlActuadorComponent;
+  let fixture: ComponentFixture<ControlActuadorComponent>;
+
+  beforeEach(() => {
+    fixture = TestBed.createComponent(ControlActuadorComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+});
+
+
+
+========================================
+ARCHIVO: src\app\components\control-actuador\control-actuador.component.ts
+========================================
+import { Component, input, output } from '@angular/core';
+import {
+  IonBadge,
+  IonCard,
+  IonCardContent,
+  IonCardHeader,
+  IonCardSubtitle,
+  IonCardTitle,
+  IonIcon,
+  IonLabel,
+  IonSegment,
+  IonSegmentButton,
+} from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { bulbOutline, snowOutline } from 'ionicons/icons';
+import { EstadoActuador, ModoControl } from '../../models/consultorio.model';
+
+@Component({
+  selector: 'app-control-actuador',
+  standalone: true,
+  imports: [
+    IonCard,
+    IonCardHeader,
+    IonCardTitle,
+    IonCardSubtitle,
+    IonCardContent,
+    IonBadge,
+    IonIcon,
+    IonSegment,
+    IonSegmentButton,
+    IonLabel,
+  ],
+  template: `
+    <ion-card>
+      <ion-card-header>
+        <div class="header-row">
+          <div class="titulo-grupo">
+            <ion-icon
+              [name]="actuador().id === 'LUCES' ? 'bulb-outline' : 'snow-outline'"
+              [color]="actuador().encendido ? 'primary' : 'medium'"
+              class="icono-disp"
+            ></ion-icon>
+            <div>
+              <ion-card-title>{{ actuador().nombre }}</ion-card-title>
+              <ion-card-subtitle>{{ actuador().zonaDescripcion }}</ion-card-subtitle>
+            </div>
+          </div>
+
+          <ion-badge [color]="actuador().encendido ? 'success' : 'medium'">
+            {{ actuador().encendido ? 'ENCENDIDO' : 'APAGADO' }}
+          </ion-badge>
+        </div>
+      </ion-card-header>
+
+      <ion-card-content>
+        <ion-segment
+          [value]="actuador().modo"
+          (ionChange)="onSegmentChange($event)"
+        >
+          <ion-segment-button value="AUTO">
+            <ion-label>Auto</ion-label>
+          </ion-segment-button>
+          <ion-segment-button value="MANUAL_ON">
+            <ion-label>ON</ion-label>
+          </ion-segment-button>
+          <ion-segment-button value="MANUAL_OFF">
+            <ion-label>OFF</ion-label>
+          </ion-segment-button>
+        </ion-segment>
+      </ion-card-content>
+    </ion-card>
+  `,
+  styles: [
+    `
+      .header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+      }
+      .titulo-grupo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .icono-disp {
+        font-size: 1.6rem;
+      }
+      ion-card-title {
+        font-size: 1rem;
+      }
+    `,
+  ],
+})
+export class ControlActuadorComponent {
+  actuador = input.required<EstadoActuador>();
+  modoChange = output<ModoControl>();
+
+  constructor() {
+    addIcons({ bulbOutline, snowOutline });
+  }
+
+  onSegmentChange(event: CustomEvent): void {
+    const valor = event.detail.value as ModoControl;
+    if (valor) {
+      this.modoChange.emit(valor);
+    }
+  }
+}
+
+
+
+========================================
+ARCHIVO: src\app\components\mapa-asientos\mapa-asientos.component.html
+========================================
+<p>mapa-asientos works!</p>
+
+
+
+========================================
+ARCHIVO: src\app\components\mapa-asientos\mapa-asientos.component.scss
+========================================
+
+
+========================================
+ARCHIVO: src\app\components\mapa-asientos\mapa-asientos.component.spec.ts
+========================================
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+
+import { MapaAsientosComponent } from './mapa-asientos.component';
+
+describe('MapaAsientosComponent', () => {
+  let component: MapaAsientosComponent;
+  let fixture: ComponentFixture<MapaAsientosComponent>;
+
+  beforeEach(() => {
+    fixture = TestBed.createComponent(MapaAsientosComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+});
+
+
+
+========================================
+ARCHIVO: src\app\components\mapa-asientos\mapa-asientos.component.ts
+========================================
+import { Component, inject } from '@angular/core';
+import { IonIcon } from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import {
+  bulb,
+  bulbOutline,
+  lockClosedOutline,
+  lockOpenOutline,
+  person,
+  personOutline,
+  syncCircle,
+  syncCircleOutline,
+} from 'ionicons/icons';
+import { ConsultorioService } from '../../core/services/consultorio.service';
+import { DispositivoId } from '../../models/consultorio.model';
+
+@Component({
+  selector: 'app-mapa-asientos',
+  standalone: true,
+  imports: [IonIcon],
+  template: `
+    <div class="consultorio-plano">
+      <!-- BARRA SUPERIOR DEL PLANO: LEDS Y PUERTA -->
+      <div class="top-infra-bar">
+        <button
+          type="button"
+          class="infra-chip"
+          [class.led-on]="consultorio.luces().encendido"
+          (click)="tocarActuador('LUCES')"
+        >
+          <ion-icon [name]="consultorio.luces().encendido ? 'bulb' : 'bulb-outline'"></ion-icon>
+          <span>
+            Leds: <strong>{{ consultorio.luces().encendido ? 'ON' : 'OFF' }}</strong>
+          </span>
+        </button>
+
+        <button
+          type="button"
+          class="infra-chip"
+          [class.puerta-abierta]="consultorio.puertaAbierta()"
+          (click)="tocarPuerta()"
+        >
+          <ion-icon [name]="consultorio.puertaAbierta() ? 'lock-open-outline' : 'lock-closed-outline'"></ion-icon>
+          <span>Puerta: <strong>{{ consultorio.puertaAbierta() ? 'ABIERTA' : 'CERRADA' }}</strong></span>
+        </button>
+      </div>
+
+      <!-- DISTRIBUCIÃ“N DE LA SALA -->
+      <div class="sala-grid">
+        <!-- HILERA IZQUIERDA -->
+        <div class="hilera-col">
+          <div class="hilera-label">Hilera Izquierda</div>
+
+          <button
+            type="button"
+            class="fan-btn"
+            [class.fan-on]="consultorio.ventiladores()[0]?.encendido"
+            (click)="tocarActuador('VENTILADOR_1')"
+          >
+            <ion-icon
+              [name]="consultorio.ventiladores()[0]?.encendido ? 'sync-circle' : 'sync-circle-outline'"
+              [class.spin]="consultorio.ventiladores()[0]?.encendido"
+            ></ion-icon>
+            <span>V1 â€¢ {{ consultorio.ventiladores()[0]?.encendido ? 'ON' : 'OFF' }}</span>
+          </button>
+
+          @for (asiento of asientosIzquierda(); track asiento.numero) {
+            <div class="seat-card" [class.seat-occupied]="asiento.ocupado">
+              <ion-icon [name]="asiento.ocupado ? 'person' : 'person-outline'"></ion-icon>
+              <div class="seat-text">
+                <strong>Silla #{{ asiento.numero }}</strong>
+                <span>{{ asiento.ocupado ? 'Ocupada (IR)' : 'Disponible' }}</span>
+              </div>
+            </div>
+          }
+
+          <button
+            type="button"
+            class="fan-btn"
+            [class.fan-on]="consultorio.ventiladores()[1]?.encendido"
+            (click)="tocarActuador('VENTILADOR_2')"
+          >
+            <ion-icon
+              [name]="consultorio.ventiladores()[1]?.encendido ? 'sync-circle' : 'sync-circle-outline'"
+              [class.spin]="consultorio.ventiladores()[1]?.encendido"
+            ></ion-icon>
+            <span>V2 â€¢ {{ consultorio.ventiladores()[1]?.encendido ? 'ON' : 'OFF' }}</span>
+          </button>
+        </div>
+
+        <!-- PASILLO CENTRAL -->
+        <div class="pasillo-col">
+          <div class="puerta-tag">ACCESO</div>
+          <div class="pasillo-line"></div>
+          <div class="pasillo-text">PASILLO</div>
+          <div class="pasillo-line"></div>
+        </div>
+
+        <!-- HILERA DERECHA -->
+        <div class="hilera-col">
+          <div class="hilera-label">Hilera Derecha</div>
+
+          <button
+            type="button"
+            class="fan-btn"
+            [class.fan-on]="consultorio.ventiladores()[2]?.encendido"
+            (click)="tocarActuador('VENTILADOR_3')"
+          >
+            <ion-icon
+              [name]="consultorio.ventiladores()[2]?.encendido ? 'sync-circle' : 'sync-circle-outline'"
+              [class.spin]="consultorio.ventiladores()[2]?.encendido"
+            ></ion-icon>
+            <span>V3 â€¢ {{ consultorio.ventiladores()[2]?.encendido ? 'ON' : 'OFF' }}</span>
+          </button>
+
+          @for (asiento of asientosDerecha(); track asiento.numero) {
+            <div class="seat-card" [class.seat-occupied]="asiento.ocupado">
+              <ion-icon [name]="asiento.ocupado ? 'person' : 'person-outline'"></ion-icon>
+              <div class="seat-text">
+                <strong>Silla #{{ asiento.numero }}</strong>
+                <span>{{ asiento.ocupado ? 'Ocupada (IR)' : 'Disponible' }}</span>
+              </div>
+            </div>
+          }
+
+          <button
+            type="button"
+            class="fan-btn"
+            [class.fan-on]="consultorio.ventiladores()[3]?.encendido"
+            (click)="tocarActuador('VENTILADOR_4')"
+          >
+            <ion-icon
+              [name]="consultorio.ventiladores()[3]?.encendido ? 'sync-circle' : 'sync-circle-outline'"
+              [class.spin]="consultorio.ventiladores()[3]?.encendido"
+            ></ion-icon>
+            <span>V4 â€¢ {{ consultorio.ventiladores()[3]?.encendido ? 'ON' : 'OFF' }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  `,
+  styles: [
+    `
+      .consultorio-plano {
+        background: #FFFFFF;
+        border: 1px solid #EFEBE9;
+        border-radius: 14px;
+        padding: 12px;
+      }
+      .top-infra-bar {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      @media (max-width: 480px) {
+        .top-infra-bar {
+          grid-template-columns: 1fr;
+        }
+      }
+      .infra-chip {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 9px 10px;
+        border-radius: 10px;
+        border: 1px solid #EFEBE9;
+        background: #F9F7F4;
+        color: #5C5552;
+        font-size: 0.78rem;
+        cursor: pointer;
+        transition: transform 0.15s ease;
+      }
+      .infra-chip:active {
+        transform: scale(0.98);
+      }
+      .led-on {
+        background: #FFF3E0;
+        border-color: #FFCC80;
+        color: #E65100;
+      }
+      .puerta-abierta {
+        background: #E8F5E9;
+        border-color: #A5D6A7;
+        color: #2E7D32;
+      }
+      .sala-grid {
+        display: grid;
+        grid-template-columns: 1fr 44px 1fr;
+        gap: 8px;
+        align-items: stretch;
+      }
+      .hilera-col {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .hilera-label {
+        text-align: center;
+        font-size: 0.7rem;
+        font-weight: 800;
+        color: #6E6663;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .fan-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 8px 6px;
+        border-radius: 10px;
+        background: #F9F7F4;
+        border: 1px solid #EFEBE9;
+        color: #6E6663;
+        font-size: 0.75rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+      .fan-btn:active {
+        transform: scale(0.97);
+      }
+      .fan-on {
+        background: #F7E6EA;
+        border-color: #E5C2CC;
+        color: #B01E53;
+      }
+      .spin {
+        animation: girar 1.3s linear infinite;
+      }
+      @keyframes girar {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+      .seat-card {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 11px 10px;
+        border-radius: 11px;
+        border: 1px solid #EFEBE9;
+        background: #FFFFFF;
+      }
+      .seat-card ion-icon {
+        font-size: 1.35rem;
+        color: #43A047;
+        flex-shrink: 0;
+      }
+      .seat-text {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.2;
+      }
+      .seat-text strong {
+        font-size: 0.82rem;
+        color: #1E1E1E;
+      }
+      .seat-text span {
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #43A047;
+      }
+      .seat-occupied {
+        border-color: #E5C2CC;
+        background: #F7E6EA;
+      }
+      .seat-occupied ion-icon {
+        color: #B01E53;
+      }
+      .seat-occupied .seat-text span {
+        color: #B01E53;
+      }
+      .pasillo-col {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        padding: 4px 0;
+      }
+      .puerta-tag {
+        font-size: 0.56rem;
+        font-weight: 800;
+        background: #F9F7F4;
+        border: 1px solid #EFEBE9;
+        color: #A0A0A0;
+        padding: 3px 5px;
+        border-radius: 6px;
+      }
+      .pasillo-line {
+        width: 1.5px;
+        flex: 1;
+        background: repeating-linear-gradient(
+          to bottom,
+          #E0D8D5 0,
+          #E0D8D5 5px,
+          transparent 5px,
+          transparent 10px
+        );
+        margin: 6px 0;
+      }
+      .pasillo-text {
+        writing-mode: vertical-rl;
+        transform: rotate(180deg);
+        font-size: 0.62rem;
+        font-weight: 800;
+        letter-spacing: 2px;
+        color: #A0A0A0;
+      }
+    `,
+  ],
+})
+export class MapaAsientosComponent {
+  consultorio = inject(ConsultorioService);
+
+  constructor() {
+    addIcons({
+      person,
+      personOutline,
+      syncCircle,
+      syncCircleOutline,
+      bulb,
+      bulbOutline,
+      lockOpenOutline,
+      lockClosedOutline,
+    });
+  }
+
+  asientosIzquierda() {
+    return this.consultorio.asientos().filter((a) => a.hilera === 'IZQUIERDA');
+  }
+
+  asientosDerecha() {
+    return this.consultorio.asientos().filter((a) => a.hilera === 'DERECHA');
+  }
+
+  tocarActuador(id: DispositivoId): void {
+    this.consultorio.alternarActuadorConRetornoAuto(id);
+  }
+
+  tocarPuerta(): void {
+    this.consultorio.alternarPuertaManual();
+  }
+}
+
+
+========================================
+ARCHIVO: src\app\core\guards\auth.guard.ts
+========================================
+import { inject } from '@angular/core';
+import { CanActivateFn, Router } from '@angular/router';
+import { RolUsuario } from '../../models/consultorio.model';
+import { AuthService } from '../services/auth.service';
+
+export const authGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+
+  if (auth.estaAutenticado()) {
+    return true;
+  }
+
+  return router.createUrlTree(['/login']);
+};
+
+export function roleGuard(rolesPermitidos: RolUsuario[]): CanActivateFn {
+  return () => {
+    const auth = inject(AuthService);
+    const router = inject(Router);
+
+    if (!auth.estaAutenticado()) {
+      return router.createUrlTree(['/login']);
+    }
+
+    if (auth.tieneRol(...rolesPermitidos)) {
+      return true;
+    }
+
+    return router.createUrlTree(['/tabs/sala']);
+  };
+}
+
+
+========================================
+ARCHIVO: src\app\core\services\auth.service.ts
+========================================
+import { environment } from '../../../environments/environment';
+import { Injectable, computed, signal } from '@angular/core';
+import { RolUsuario, UsuarioSesion } from '../../models/consultorio.model';
+
+export interface RespuestaLogin {
+  ok: boolean;
+  mensaje?: string;
+}
+
+const ETIQUETAS_ROL: Record<RolUsuario, string> = {
+  super_admin: 'Doctora titular',
+  doctor: 'Doctor',
+  asistente: 'Asistente',
+};
+
+@Injectable({
+  providedIn: 'root',
+})
+export class AuthService {
+  private readonly STORAGE_KEY = 'dentissa_sesion_v1';
+  private readonly API_LOGIN_URL = `${environment.apiUrl}/app/login`;
+
+  readonly usuarioActual = signal<UsuarioSesion | null>(this.cargarSesionGuardada());
+  readonly esSuperAdmin = computed(() => this.usuarioActual()?.rol === 'super_admin');
+  readonly esDoctor = computed(() => this.usuarioActual()?.rol === 'doctor');
+  readonly esAsistente = computed(() => this.usuarioActual()?.rol === 'asistente');
+
+  private normalizarRol(raw: unknown): RolUsuario | null {
+    const val = String(raw ?? '').trim().toLowerCase();
+    if (val === 'super_admin' || val === 'admin') return 'super_admin';
+    if (val === 'doctor') return 'doctor';
+    if (val === 'asistente') return 'asistente';
+    return null;
+  }
+
+  private cargarSesionGuardada(): UsuarioSesion | null {
+    try {
+      const raw = localStorage.getItem(this.STORAGE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw) as UsuarioSesion;
+      const rolNormalizado = this.normalizarRol(parsed.rol);
+      if (!rolNormalizado) return null;
+      return {
+        ...parsed,
+        rol: rolNormalizado,
+        rol_etiqueta: parsed.rol_etiqueta || ETIQUETAS_ROL[rolNormalizado],
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  estaAutenticado(): boolean {
+    return this.usuarioActual() !== null;
+  }
+
+  tieneRol(...roles: RolUsuario[]): boolean {
+    const actual = this.usuarioActual()?.rol;
+    return !!actual && roles.includes(actual);
+  }
+
+  async iniciarSesion(email: string, password: string): Promise<RespuestaLogin> {
+    const correoLimpio = email.trim().toLowerCase();
+    if (!correoLimpio || !password) {
+      return { ok: false, mensaje: 'Ingresa tu correo electrÃ³nico y contraseÃ±a.' };
+    }
+
+    try {
+      const resp = await fetch(this.API_LOGIN_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          email: correoLimpio,
+          password,
+        }),
+      });
+
+      const data = await resp.json().catch(() => ({}));
+
+      if (!resp.ok || !data?.ok) {
+        return {
+          ok: false,
+          mensaje: data?.mensaje || data?.message || 'Correo o contraseÃ±a incorrectos.',
+        };
+      }
+
+      const u = data.user;
+      if (Number(u.activo) === 0) {
+        return {
+          ok: false,
+          mensaje: 'Tu cuenta estÃ¡ desactivada. Contacta a la administradora.',
+        };
+      }
+
+      const rolNormalizado = this.normalizarRol(u.rol);
+      if (!rolNormalizado) {
+        return {
+          ok: false,
+          mensaje: 'Acceso exclusivo para personal autorizado de la clÃ­nica.',
+        };
+      }
+
+      const sesion: UsuarioSesion = {
+        id: u.id,
+        nombre: `${u.nombre} ${u.apellido || ''}`.trim(),
+        apellido: u.apellido || '',
+        email: u.email,
+        rol: rolNormalizado,
+        rol_etiqueta: u.rol_etiqueta || ETIQUETAS_ROL[rolNormalizado],
+        foto_perfil: u.foto_perfil ?? null,
+      };
+
+      this.usuarioActual.set(sesion);
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(sesion));
+      return { ok: true };
+    } catch {
+      return {
+        ok: false,
+        mensaje: 'No se pudo conectar con el servidor de Dentissa. Verifica tu conexiÃ³n a internet.',
+      };
+    }
+  }
+
+  cerrarSesion(): void {
+    this.usuarioActual.set(null);
+    localStorage.removeItem(this.STORAGE_KEY);
+  }
+}
+
+
+========================================
+ARCHIVO: src\app\core\services\auth.spec.ts
+========================================
+import { TestBed } from '@angular/core/testing';
+import { Auth } from './auth';
+
+describe('Auth', () => {
+  let service: Auth;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({});
+    service = TestBed.inject(Auth);
+  });
+
+  it('should be created', () => {
+    expect(service).toBeTruthy();
+  });
+});
+
+
+
+========================================
+ARCHIVO: src\app\core\services\auth.ts
+========================================
+import { Service } from '@angular/core';
+
+@Service()
+export class Auth {}
+
+
+
+========================================
+ARCHIVO: src\app\core\services\citas-qr.spec.ts
+========================================
+import { TestBed } from '@angular/core/testing';
+import { CitasQr } from './citas-qr';
+
+describe('CitasQr', () => {
+  let service: CitasQr;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({});
+    service = TestBed.inject(CitasQr);
+  });
+
+  it('should be created', () => {
+    expect(service).toBeTruthy();
+  });
+});
+
+
+
+========================================
+ARCHIVO: src\app\core\services\citas-qr.ts
+========================================
+import { Service } from '@angular/core';
+
+@Service()
+export class CitasQr {}
+
+
+
+========================================
+ARCHIVO: src\app\core\services\consultorio.service.ts
+========================================
+import { HttpClient } from '@angular/common/http';
+import { Injectable, computed, inject, signal } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import {
+  AsientoEstado,
+  DispositivoId,
+  EstadisticaAsiento,
+  EstadoActuador,
+  ModoControl,
+  OrigenMovimiento,
+  RegistroAuditoria,
+  RegistroLlegadaQr,
+} from '../../models/consultorio.model';
+import { AuthService } from './auth.service';
+
+export type RangoEstadistica = 'hoy' | 'semana' | 'mes' | 'anio';
+
+@Injectable({
+  providedIn: 'root',
+})
+export class ConsultorioService {
+  private http = inject(HttpClient);
+  private auth = inject(AuthService);
+  private readonly apiIotUrl = `${environment.apiUrl}/iot`;
+
+  private seqId = 1;
+  private puertaTimer: ReturnType<typeof setTimeout> | null = null;
+  private syncInterval: ReturnType<typeof setInterval> | null = null;
+  private relojStatsInterval: ReturnType<typeof setInterval> | null = null;
+  private bloqueandoSync = false;
+
+  private timersAuto = new Map<DispositivoId, ReturnType<typeof setTimeout>>();
+  private intervalosCuenta = new Map<DispositivoId, ReturnType<typeof setInterval>>();
+  readonly segundosRestantesAuto = signal<Partial<Record<DispositivoId, number>>>({});
+  readonly tiempoRetornoAutoSeg = 5;
+
+  readonly rangoEstadistica = signal<RangoEstadistica>('hoy');
+  readonly mesSeleccionado = signal<number>(new Date().getMonth() + 1);
+  readonly anioSeleccionado = signal<number>(new Date().getFullYear());
+  readonly cargandoEstadisticas = signal<boolean>(false);
+  readonly historialDisponible = signal<boolean>(true);
+  readonly estadisticasHistoricas = signal<EstadisticaAsiento[]>([]);
+  readonly entradasQrHistoricas = signal<number>(0);
+  readonly entradasQrHoyBackend = signal<number>(0);
+
+  private inicioOcupacionMs = new Map<number, number>();
+  private segundosAcumulados = signal<Record<number, number>>({
+    1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0,
+  });
+  private ahoraTick = signal<number>(Date.now());
+
+  readonly capacidadMaxima = 6;
+  readonly esp32EnLinea = signal<boolean>(false);
+  readonly aforoActual = signal<number>(0);
+  readonly puertaAbierta = signal<boolean>(false);
+  readonly ultimaActualizacion = signal<Date>(new Date());
+
+  readonly asientos = signal<AsientoEstado[]>([
+    { numero: 1, hilera: 'IZQUIERDA', ocupado: false, zonasVentilador: [1], vecesUsado: 0 },
+    { numero: 2, hilera: 'IZQUIERDA', ocupado: false, zonasVentilador: [1, 2], vecesUsado: 0 },
+    { numero: 3, hilera: 'IZQUIERDA', ocupado: false, zonasVentilador: [2], vecesUsado: 0 },
+    { numero: 4, hilera: 'DERECHA', ocupado: false, zonasVentilador: [3], vecesUsado: 0 },
+    { numero: 5, hilera: 'DERECHA', ocupado: false, zonasVentilador: [3, 4], vecesUsado: 0 },
+    { numero: 6, hilera: 'DERECHA', ocupado: false, zonasVentilador: [4], vecesUsado: 0 },
+  ]);
+
+  readonly luces = signal<EstadoActuador>({
+    id: 'LUCES',
+    nombre: 'Tira LED Sala',
+    zonaDescripcion: 'IluminaciÃ³n ambiental y acceso',
+    modo: 'AUTO',
+    encendido: false,
+  });
+
+  readonly ventiladores = signal<EstadoActuador[]>([
+    { id: 'VENTILADOR_1', nombre: 'Ventilador 1', zonaDescripcion: 'Izq. Frontal (Asientos 1-2)', modo: 'AUTO', encendido: false },
+    { id: 'VENTILADOR_2', nombre: 'Ventilador 2', zonaDescripcion: 'Izq. Fondo (Asientos 2-3)', modo: 'AUTO', encendido: false },
+    { id: 'VENTILADOR_3', nombre: 'Ventilador 3', zonaDescripcion: 'Der. Frontal (Asientos 4-5)', modo: 'AUTO', encendido: false },
+    { id: 'VENTILADOR_4', nombre: 'Ventilador 4', zonaDescripcion: 'Der. Fondo (Asientos 5-6)', modo: 'AUTO', encendido: false },
+  ]);
+
+  readonly telemetria = computed(() => ({
+    capacidadMaxima: this.capacidadMaxima,
+    esp32EnLinea: this.esp32EnLinea(),
+    luces: this.luces(),
+    ventiladores: this.ventiladores(),
+    asientos: this.asientos(),
+    puertaAbierta: this.puertaAbierta(),
+    aforoActual: this.aforoActual(),
+  }));
+
+  readonly auditoria = signal<RegistroAuditoria[]>([]);
+  readonly llegadasQr = signal<RegistroLlegadaQr[]>([]);
+
+  readonly asientosOcupados = computed(
+    () => this.asientos().filter((a) => a.ocupado).length
+  );
+
+  readonly citasAtendidasHoy = computed(
+    () => Math.max(this.entradasQrHoyBackend(), this.llegadasQr().length)
+  );
+
+  readonly estadisticasAsientos = computed<EstadisticaAsiento[]>(() => {
+    const rango = this.rangoEstadistica();
+    if (rango !== 'hoy') {
+      const hist = this.estadisticasHistoricas();
+      if (hist.length > 0) return hist;
+    }
+
+    const lista = this.asientos();
+    const acum = this.segundosAcumulados();
+    const ahora = this.ahoraTick();
+    const totalUsos = lista.reduce((acc, a) => acc + a.vecesUsado, 0) || 1;
+
+    return lista.map((a) => {
+      let segs = acum[a.numero] || 0;
+      const inicioActual = this.inicioOcupacionMs.get(a.numero);
+      if (a.ocupado && inicioActual) {
+        segs += Math.floor((ahora - inicioActual) / 1000);
+      }
+
+      return {
+        numero: a.numero,
+        hilera: a.hilera,
+        ocupadoAhora: a.ocupado,
+        vecesUsado: a.vecesUsado,
+        porcentajeUso: a.vecesUsado === 0 ? 0 : Math.round((a.vecesUsado / totalUsos) * 100),
+        tiempoTotalSegundos: segs,
+      };
+    });
+  });
+
+  readonly resumenEstadisticas = computed(() => {
+    const stats = this.estadisticasAsientos();
+    const totalSesiones = stats.reduce((acc, s) => acc + s.vecesUsado, 0);
+    const totalSegundos = stats.reduce((acc, s) => acc + s.tiempoTotalSegundos, 0);
+    const promedioSegundos = totalSesiones > 0 ? Math.round(totalSegundos / totalSesiones) : 0;
+
+    const masUsado = [...stats].sort((a, b) => b.vecesUsado - a.vecesUsado)[0];
+    const asientoTop = masUsado && masUsado.vecesUsado > 0 ? `Silla #${masUsado.numero}` : 'Sin datos';
+    const entradasQr =
+      this.rangoEstadistica() === 'hoy'
+        ? this.citasAtendidasHoy()
+        : this.entradasQrHistoricas();
+
+    return {
+      totalSesiones,
+      totalSegundos,
+      promedioSegundos,
+      asientoTop,
+      entradasQr,
+      demoraAlta: promedioSegundos > 900,
+    };
+  });
+
+  constructor() {
+    this.iniciarSincronizacionReal();
+    this.relojStatsInterval = setInterval(() => {
+      if (this.asientosOcupados() > 0 && this.rangoEstadistica() === 'hoy') {
+        this.ahoraTick.set(Date.now());
+      }
+    }, 1000);
+  }
+
+  cambiarRangoEstadisticas(rango: RangoEstadistica): void {
+    this.rangoEstadistica.set(rango);
+    this.consultarEstadisticasFiltradas();
+  }
+
+  cambiarMesAnioEstadisticas(mes: number, anio: number): void {
+    this.mesSeleccionado.set(Number(mes));
+    this.anioSeleccionado.set(Number(anio));
+    this.consultarEstadisticasFiltradas();
+  }
+
+  consultarEstadisticasFiltradas(): void {
+    const rango = this.rangoEstadistica();
+    const mes = this.mesSeleccionado();
+    const anio = this.anioSeleccionado();
+    this.cargandoEstadisticas.set(true);
+
+    if (!this.historialDisponible()) {
+      this.cargandoEstadisticas.set(false);
+      return;
+    }
+
+    const url = `${this.apiIotUrl}/estadisticas?periodo=${rango}&mes=${mes}&anio=${anio}`;
+    this.http.get<any>(url).subscribe({
+      next: (res) => {
+        this.historialDisponible.set(true);
+        this.cargandoEstadisticas.set(false);
+        this.entradasQrHistoricas.set(Number(res?.total_entradas_qr || 0));
+
+        if (Array.isArray(res?.asientos)) {
+          const totalUsos =
+            res.asientos.reduce((acc: number, x: any) => acc + Number(x.veces_usado || 0), 0) || 1;
+
+          const mapeados: EstadisticaAsiento[] = this.asientos().map((base) => {
+            const r = res.asientos.find((item: any) => Number(item.numero) === base.numero);
+            const usos = Number(r?.veces_usado || 0);
+            const segs = Number(r?.tiempo_total_segundos || 0);
+            return {
+              numero: base.numero,
+              hilera: base.hilera,
+              ocupadoAhora: base.ocupado,
+              vecesUsado: usos,
+              porcentajeUso: usos === 0 ? 0 : Math.round((usos / totalUsos) * 100),
+              tiempoTotalSegundos: segs,
+            };
+          });
+
+          if (rango === 'hoy') {
+            const nuevosSegs: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
+            mapeados.forEach((m) => (nuevosSegs[m.numero] = m.tiempoTotalSegundos));
+            this.segundosAcumulados.set(nuevosSegs);
+            this.asientos.update((lista) =>
+              lista.map((a) => {
+                const m = mapeados.find((x) => x.numero === a.numero);
+                return m ? { ...a, vecesUsado: Math.max(a.vecesUsado, m.vecesUsado) } : a;
+              })
+            );
+          } else {
+            this.estadisticasHistoricas.set(mapeados);
+          }
+        }
+      },
+      error: () => {
+        this.esp32EnLinea.set(false);
+      },
+    });
+  }
+
+  async validarYAbrirPuertaQr(codigoQr: string): Promise<{ ok: boolean; mensaje: string }> {
+    const limpio = codigoQr.trim();
+    if (!limpio) {
+      return { ok: false, mensaje: 'CÃ³digo QR vacÃ­o.' };
+    }
+
+    try {
+      const res = await firstValueFrom(
+        this.http.post<any>(`${this.apiIotUrl}/puerta/abrir`, { codigo_qr: limpio })
+      );
+
+      if (!res?.ok) {
+        const msg = res?.mensaje || 'CÃ³digo QR no vÃ¡lido en la base de datos.';
+        this.registrarAuditoria('Lector QR Puerta', `Acceso denegado (${limpio})`, 'AUTOMATICO');
+        return { ok: false, mensaje: msg };
+      }
+
+      const nombre = res.nombre || limpio;
+      const tipo: 'PACIENTE' | 'PERSONAL' = res.tipo === 'PERSONAL' ? 'PERSONAL' : 'PACIENTE';
+
+      this.puertaAbierta.set(true);
+      this.entradasQrHoyBackend.update((v) => v + 1);
+      if (this.rangoEstadistica() !== 'hoy') {
+        this.entradasQrHistoricas.update((v) => v + 1);
+      }
+
+      if (tipo === 'PACIENTE' && this.aforoActual() < this.capacidadMaxima) {
+        this.aforoActual.update((v) => v + 1);
+      }
+
+      this.llegadasQr.update((lista) => [
+        { id: this.seqId++, nombre, tipo, codigoQr: limpio, horaLlegada: new Date() },
+        ...lista,
+      ]);
+
+      if (!this.luces().encendido) {
+        this.cambiarModoActuador('LUCES', 'MANUAL_ON', false);
+      }
+      this.recalcularAutomatizacion();
+      this.registrarAuditoria(
+        'Puerta Servomotor & LED',
+        `Acceso QR vÃ¡lido: ${nombre} (${limpio})`,
+        'AUTOMATICO'
+      );
+
+      if (this.puertaTimer) clearTimeout(this.puertaTimer);
+      this.puertaTimer = setTimeout(() => {
+        this.puertaAbierta.set(false);
+        this.recalcularAutomatizacion();
+      }, 3000);
+
+      return { ok: true, mensaje: res.mensaje || `Puerta abierta para ${nombre}` };
+    } catch (err: any) {
+      const msg = err?.error?.mensaje || 'CÃ³digo QR no registrado en la base de datos.';
+      this.registrarAuditoria('Lector QR Puerta', `QR rechazado: ${limpio}`, 'AUTOMATICO');
+      return { ok: false, mensaje: msg };
+    }
+  }
+
+  iniciarSincronizacionReal(): void {
+    this.sincronizarDesdeBackend();
+    if (this.syncInterval) clearInterval(this.syncInterval);
+
+    this.syncInterval = setInterval(() => {
+      if (!this.bloqueandoSync) {
+        this.sincronizarDesdeBackend();
+      }
+    }, 1000);
+  }
+
+  sincronizarDesdeBackend(): void {
+    if (!this.historialDisponible()) {
+      return;
+    }
+
+    this.http.get<any>(`${this.apiIotUrl}/estado`).subscribe({
+      next: (res) => {
+        const online = res?.esp32_en_linea !== undefined ? Boolean(res.esp32_en_linea) : true;
+        this.esp32EnLinea.set(online);
+
+        if (res?.entradas_qr_hoy !== undefined) {
+          this.entradasQrHoyBackend.set(Number(res.entradas_qr_hoy));
+        }
+
+        if (Array.isArray(res.asientos)) {
+          const ahora = Date.now();
+          this.asientos.update((actuales) =>
+            actuales.map((a) => {
+              const remoto = res.asientos.find((r: any) => Number(r.numero) === a.numero);
+              if (!remoto) return a;
+              const ocupadoAhora = Boolean(remoto.ocupado);
+              const incremento = !a.ocupado && ocupadoAhora ? 1 : 0;
+
+              if (!a.ocupado && ocupadoAhora) {
+                this.inicioOcupacionMs.set(a.numero, ahora);
+              } else if (a.ocupado && !ocupadoAhora) {
+                const inicio = this.inicioOcupacionMs.get(a.numero);
+                if (inicio) {
+                  const duracion = Math.max(1, Math.floor((ahora - inicio) / 1000));
+                  this.segundosAcumulados.update((prev) => ({
+                    ...prev,
+                    [a.numero]: (prev[a.numero] || 0) + duracion,
+                  }));
+                  this.inicioOcupacionMs.delete(a.numero);
+                }
+              }
+
+              if (a.ocupado !== ocupadoAhora) {
+                if (!this.luces().encendido) {
+                  this.cambiarModoActuador('LUCES', 'MANUAL_ON', false);
+                }
+                a.zonasVentilador.forEach((z) => {
+                  const ventId = (`VENTILADOR_${z}`) as DispositivoId;
+                  const vent = this.ventiladores().find((v) => v.id === ventId);
+                  if (vent && vent.modo !== 'AUTO') {
+                    this.cambiarModoActuador(ventId, 'AUTO', false);
+                  }
+                });
+              }
+
+              return {
+                ...a,
+                ocupado: ocupadoAhora,
+                vecesUsado: remoto.vecesUsado ?? a.vecesUsado + incremento,
+              };
+            })
+          );
+          this.aforoActual.set(this.asientosOcupados());
+        }
+
+        if (Array.isArray(res.ventiladores)) {
+          this.ventiladores.update((actuales) =>
+            actuales.map((v, idx) => {
+              const remoto = res.ventiladores.find((r: any) => Number(r.numero) === idx + 1);
+              if (!remoto) return v;
+              return {
+                ...v,
+                modo: (remoto.modo as ModoControl) || v.modo,
+                encendido: Boolean(remoto.encendido),
+              };
+            })
+          );
+        }
+
+        if (res.luces) {
+          this.luces.update((l) => ({
+            ...l,
+            modo: (res.luces.modo as ModoControl) || l.modo,
+            encendido: Boolean(res.luces.encendido),
+          }));
+        }
+
+        this.ultimaActualizacion.set(new Date());
+      },
+      error: () => {
+        this.esp32EnLinea.set(false);
+      },
+    });
+  }
+
+  alternarActuadorConRetornoAuto(id: DispositivoId): void {
+    if (id === 'LUCES') {
+      const siguiente: ModoControl = this.luces().encendido ? 'MANUAL_OFF' : 'MANUAL_ON';
+      this.cambiarModoActuador('LUCES', siguiente, false);
+      return;
+    }
+
+    const vent = this.ventiladores().find((v) => v.id === id);
+    if (!vent) return;
+    const siguiente: ModoControl = vent.encendido ? 'MANUAL_OFF' : 'MANUAL_ON';
+    this.cambiarModoActuador(id, siguiente, true);
+  }
+
+  cambiarModoActuador(id: DispositivoId, nuevoModo: ModoControl, programarRetornoAuto = true): void {
+    this.bloqueandoSync = true;
+    this.limpiarTemporizadorAuto(id);
+
+    if (id === 'LUCES') {
+      const encendido =
+        nuevoModo === 'MANUAL_ON'
+          ? true
+          : nuevoModo === 'MANUAL_OFF'
+            ? false
+            : this.aforoActual() > 0 || this.puertaAbierta();
+
+      this.luces.update((l) => ({ ...l, modo: nuevoModo, encendido }));
+      this.registrarAuditoria('Tira LED Sala', `Modo ${nuevoModo}`, 'MANUAL');
+      this.enviarComandoActuador('LUCES', nuevoModo, encendido);
+    } else {
+      let estadoEncendido = false;
+      this.ventiladores.update((lista) =>
+        lista.map((v) => {
+          if (v.id !== id) return v;
+          const zonaNum = Number(id.split('_')[1]);
+          const hayPresencia = this.asientos().some(
+            (a) => a.ocupado && a.zonasVentilador.includes(zonaNum)
+          );
+          estadoEncendido =
+            nuevoModo === 'MANUAL_ON'
+              ? true
+              : nuevoModo === 'MANUAL_OFF'
+                ? false
+                : hayPresencia;
+
+          return { ...v, modo: nuevoModo, encendido: estadoEncendido };
+        })
+      );
+
+      const vent = this.ventiladores().find((v) => v.id === id);
+      this.registrarAuditoria(vent?.nombre || id, `Modo ${nuevoModo}`, 'MANUAL');
+      this.enviarComandoActuador(id, nuevoModo, estadoEncendido);
+    }
+
+    if (programarRetornoAuto && nuevoModo !== 'AUTO') {
+      this.programarRegresoAuto(id);
+    }
+  }
+
+  private programarRegresoAuto(id: DispositivoId): void {
+    let restantes = this.tiempoRetornoAutoSeg;
+    this.segundosRestantesAuto.update((map) => ({ ...map, [id]: restantes }));
+
+    const intervalo = setInterval(() => {
+      restantes -= 1;
+      if (restantes > 0) {
+        this.segundosRestantesAuto.update((map) => ({ ...map, [id]: restantes }));
+      } else {
+        this.limpiarTemporizadorAuto(id);
+      }
+    }, 1000);
+
+    const timeout = setTimeout(() => {
+      this.limpiarTemporizadorAuto(id);
+      this.cambiarModoActuador(id, 'AUTO', false);
+    }, this.tiempoRetornoAutoSeg * 1000);
+
+    this.intervalosCuenta.set(id, intervalo);
+    this.timersAuto.set(id, timeout);
+  }
+
+  private limpiarTemporizadorAuto(id: DispositivoId): void {
+    const t = this.timersAuto.get(id);
+    if (t) clearTimeout(t);
+    this.timersAuto.delete(id);
+
+    const i = this.intervalosCuenta.get(id);
+    if (i) clearInterval(i);
+    this.intervalosCuenta.delete(id);
+
+    this.segundosRestantesAuto.update((map) => {
+      const copia = { ...map };
+      delete copia[id];
+      return copia;
+    });
+  }
+
+  restablecerTodoAuto(): void {
+    this.cambiarModoActuador('LUCES', 'AUTO', false);
+    this.ventiladores().forEach((v) => this.cambiarModoActuador(v.id, 'AUTO', false));
+  }
+
+  apagarTodo(): void {
+    this.cambiarModoActuador('LUCES', 'MANUAL_OFF', false);
+    this.ventiladores().forEach((v) => this.cambiarModoActuador(v.id, 'MANUAL_OFF', false));
+    this.registrarAuditoria('Sala Completa', 'Apagado general (Leds y ventiladores)', 'MANUAL');
+  }
+
+  private enviarComandoActuador(dispositivo: DispositivoId, modo: ModoControl, encendido: boolean): void {
+    this.http
+      .post(`${this.apiIotUrl}/actuadores`, {
+        dispositivo,
+        modo,
+        encendido,
+        ventiladores: this.ventiladores().map((v, i) => ({
+          numero: i + 1,
+          modo: v.modo,
+          encendido: v.encendido,
+        })),
+      })
+      .subscribe({
+        next: () => (this.bloqueandoSync = false),
+        error: () => (this.bloqueandoSync = false),
+      });
+  }
+
+  alternarPuertaManual(): void {
+    const abrir = !this.puertaAbierta();
+    this.puertaAbierta.set(abrir);
+    if (this.puertaTimer) clearTimeout(this.puertaTimer);
+
+    if (abrir) {
+      this.http.post(`${this.apiIotUrl}/puerta/abrir`, { codigo_qr: 'MANUAL_APP' }).subscribe({
+        error: () => {},
+      });
+      if (!this.luces().encendido) {
+        this.cambiarModoActuador('LUCES', 'MANUAL_ON', false);
+      }
+      this.recalcularAutomatizacion();
+      this.registrarAuditoria('Puerta Servomotor', 'Apertura manual desde app', 'MANUAL');
+
+      this.puertaTimer = setTimeout(() => {
+        this.puertaAbierta.set(false);
+        this.recalcularAutomatizacion();
+      }, 3000);
+    } else {
+      this.recalcularAutomatizacion();
+      this.registrarAuditoria('Puerta Servomotor', 'Cierre manual desde app', 'MANUAL');
+    }
+  }
+  private recalcularAutomatizacion(): void {
+    const hayPersonas = this.aforoActual() > 0 || this.asientosOcupados() > 0;
+    const puerta = this.puertaAbierta();
+
+    if (hayPersonas && !this.luces().encendido && this.luces().modo === 'AUTO') {
+      this.cambiarModoActuador('LUCES', 'MANUAL_ON', false);
+    }
+
+    const asientosActuales = this.asientos();
+    this.ventiladores.update((lista) =>
+      lista.map((v) => {
+        if (v.modo !== 'AUTO') return v;
+        const zonaNum = Number(v.id.split('_')[1]);
+        const ocupadoEnZona = asientosActuales.some(
+          (a) => a.ocupado && a.zonasVentilador.includes(zonaNum)
+        );
+        return { ...v, encendido: ocupadoEnZona };
+      })
+    );
+
+    this.ultimaActualizacion.set(new Date());
+  }
+
+  private registrarAuditoria(dispositivo: string, accion: string, origen: OrigenMovimiento): void {
+    const user = this.auth.usuarioActual();
+    this.auditoria.update((lista) => [
+      {
+        id: this.seqId++,
+        usuarioNombre: origen === 'AUTOMATICO' ? 'Sistema IoT' : user?.nombre || 'Personal',
+        rol: user?.rol || 'super_admin',
+        dispositivo,
+        accion,
+        origen,
+        fechaHora: new Date(),
+      },
+      ...lista.slice(0, 29),
+    ]);
+  }
+}
+
+
+
+
+
+========================================
+ARCHIVO: src\app\core\services\consultorio.spec.ts
+========================================
+import { TestBed } from '@angular/core/testing';
+import { Consultorio } from './consultorio';
+
+describe('Consultorio', () => {
+  let service: Consultorio;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({});
+    service = TestBed.inject(Consultorio);
+  });
+
+  it('should be created', () => {
+    expect(service).toBeTruthy();
+  });
+});
+
+
+
+========================================
+ARCHIVO: src\app\core\services\consultorio.ts
+========================================
+import { Service } from '@angular/core';
+
+@Service()
+export class Consultorio {}
+
+
+
+========================================
+ARCHIVO: src\app\core\services\totp.service.ts
+========================================
+import { Injectable } from '@angular/core';
+
+@Injectable({
+  providedIn: 'root',
+})
+export class TotpService {
+  readonly PERIODO_SEGUNDOS = 30;
+
+  obtenerSegundosRestantes(): number {
+    const epochSegundos = Math.floor(Date.now() / 1000);
+    return this.PERIODO_SEGUNDOS - (epochSegundos % this.PERIODO_SEGUNDOS);
+  }
+
+  async generarCodigo(secretBase32: string, offsetVentana = 0): Promise<string> {
+    const keyBuffer = this.base32ToArrayBuffer(secretBase32);
+    const counter =
+      Math.floor(Date.now() / 1000 / this.PERIODO_SEGUNDOS) + offsetVentana;
+
+    const counterBuffer = new ArrayBuffer(8);
+    const view = new DataView(counterBuffer);
+    view.setUint32(0, Math.floor(counter / 0x100000000), false);
+    view.setUint32(4, counter >>> 0, false);
+
+    const cryptoKey = await crypto.subtle.importKey(
+      'raw',
+      keyBuffer,
+      { name: 'HMAC', hash: 'SHA-1' },
+      false,
+      ['sign']
+    );
+
+    const signature = await crypto.subtle.sign('HMAC', cryptoKey, counterBuffer);
+    const hmac = new Uint8Array(signature);
+
+    const offset = hmac[hmac.length - 1] & 0x0f;
+    const binary =
+      ((hmac[offset] & 0x7f) << 24) |
+      ((hmac[offset + 1] & 0xff) << 16) |
+      ((hmac[offset + 2] & 0xff) << 8) |
+      (hmac[offset + 3] & 0xff);
+
+    return (binary % 1000000).toString().padStart(6, '0');
+  }
+
+  async generarPayloadQr(userId: string, secretBase32: string): Promise<{
+    payload: string;
+    codigoOtp: string;
+  }> {
+    const codigoOtp = await this.generarCodigo(secretBase32, 0);
+    return {
+      payload: `DENTISSA:${userId}:${codigoOtp}`,
+      codigoOtp,
+    };
+  }
+
+  async verificarCodigo(secretBase32: string, codigoRecibido: string): Promise<boolean> {
+    const limpio = codigoRecibido.trim();
+    if (!/^\d{6}$/.test(limpio)) return false;
+
+    for (const ventana of [0, -1, 1]) {
+      const esperado = await this.generarCodigo(secretBase32, ventana);
+      if (esperado === limpio) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private base32ToArrayBuffer(base32: string): ArrayBuffer {
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+    const clean = base32.toUpperCase().replace(/=+$/, '').replace(/\s+/g, '');
+    let bits = 0;
+    let value = 0;
+    const output: number[] = [];
+
+    for (let i = 0; i < clean.length; i++) {
+      const idx = alphabet.indexOf(clean[i]);
+      if (idx === -1) continue;
+      value = (value << 5) | idx;
+      bits += 5;
+      if (bits >= 8) {
+        output.push((value >>> (bits - 8)) & 255);
+        bits -= 8;
+      }
+    }
+    return new Uint8Array(output).buffer;
+  }
+}
+
+
+
+========================================
+ARCHIVO: src\app\explore-container\explore-container.component.html
+========================================
+<div id="container">
+  <strong>{{ name() }}</strong>
+  <p>
+    Explore
+    <a target="_blank" rel="noopener noreferrer" href="https://ionicframework.com/docs/components">UI Components</a>
+  </p>
+</div>
+
+
+
+========================================
+ARCHIVO: src\app\explore-container\explore-container.component.scss
+========================================
+#container {
+  text-align: center;
+
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+#container strong {
+  font-size: 20px;
+  line-height: 26px;
+}
+
+#container p {
+  font-size: 16px;
+  line-height: 22px;
+
+  color: #8c8c8c;
+
+  margin: 0;
+}
+
+#container a {
+  text-decoration: none;
+}
+
+
+========================================
+ARCHIVO: src\app\explore-container\explore-container.component.spec.ts
+========================================
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
+
+import { ExploreContainerComponent } from './explore-container.component';
+
+describe('ExploreContainerComponent', () => {
+  let component: ExploreContainerComponent;
+  let fixture: ComponentFixture<ExploreContainerComponent>;
+
+  beforeEach(async () => {
+    fixture = TestBed.createComponent(ExploreContainerComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+});
+
+
+
+========================================
+ARCHIVO: src\app\explore-container\explore-container.component.ts
+========================================
+import { Component, input } from '@angular/core';
+
+@Component({
+  selector: 'app-explore-container',
+  templateUrl: './explore-container.component.html',
+  styleUrls: ['./explore-container.component.scss'],
+})
+export class ExploreContainerComponent {
+  readonly name = input<string>();
+}
+
+
+
+========================================
+ARCHIVO: src\app\models\consultorio.model.ts
+========================================
+export type RolUsuario = 'super_admin' | 'doctor' | 'asistente';
+
+export interface UsuarioSesion {
+  id: number | string;
+  nombre: string;
+  apellido?: string;
+  email: string;
+  rol: RolUsuario;
+  rol_etiqueta?: string;
+  foto_perfil?: string | null;
+}
+
+export type DispositivoId =
+  | 'LUCES'
+  | 'VENTILADOR_1'
+  | 'VENTILADOR_2'
+  | 'VENTILADOR_3'
+  | 'VENTILADOR_4';
+
+export type ModoControl = 'AUTO' | 'MANUAL_ON' | 'MANUAL_OFF';
+export type OrigenMovimiento = 'AUTOMATICO' | 'MANUAL';
+
+export interface AsientoEstado {
+  numero: number;
+  hilera: 'IZQUIERDA' | 'DERECHA';
+  ocupado: boolean;
+  zonasVentilador: number[];
+  vecesUsado: number;
+}
+
+export interface EstadoActuador {
+  id: DispositivoId;
+  nombre: string;
+  zonaDescripcion: string;
+  modo: ModoControl;
+  encendido: boolean;
+}
+
+export interface RegistroAuditoria {
+  id: number;
+  usuarioNombre: string;
+  rol: RolUsuario;
+  rol_etiqueta?: string;
+  dispositivo: string;
+  accion: string;
+  origen: OrigenMovimiento;
+  fechaHora: Date;
+}
+
+export interface RegistroLlegadaQr {
+  id: number;
+  nombre: string;
+  tipo: 'PACIENTE' | 'PERSONAL';
+  codigoQr: string;
+  horaLlegada: Date;
+}
+
+export interface EstadisticaAsiento {
+  numero: number;
+  hilera: 'IZQUIERDA' | 'DERECHA';
+  ocupadoAhora: boolean;
+  vecesUsado: number;
+  porcentajeUso: number;
+  tiempoTotalSegundos: number;
+}
+
+
+========================================
+ARCHIVO: src\app\pages\acceso-qr\acceso-qr.page.html
+========================================
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>acceso-qr</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large">acceso-qr</ion-title>
+    </ion-toolbar>
+  </ion-header>
+</ion-content>
+
+
+
+========================================
+ARCHIVO: src\app\pages\acceso-qr\acceso-qr.page.scss
+========================================
+
+
+========================================
+ARCHIVO: src\app\pages\acceso-qr\acceso-qr.page.spec.ts
+========================================
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { AccesoQrPage } from './acceso-qr.page';
+
+describe('AccesoQrPage', () => {
+  let component: AccesoQrPage;
+  let fixture: ComponentFixture<AccesoQrPage>;
+
+  beforeEach(() => {
+    fixture = TestBed.createComponent(AccesoQrPage);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+});
+
+
+
+========================================
+ARCHIVO: src\app\pages\acceso-qr\acceso-qr.page.ts
+========================================
+import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import {
+  IonBadge,
+  IonButton,
+  IonCard,
+  IonCardContent,
+  IonCardHeader,
+  IonCardSubtitle,
+  IonCardTitle,
+  IonContent,
+  IonHeader,
+  IonIcon,
+  IonInput,
+  IonItem,
+  IonLabel,
+  IonList,
+  IonProgressBar,
+  IonSegment,
+  IonSegmentButton,
+  IonTitle,
+  IonToolbar,
+} from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import {
+  cameraOutline,
+  checkmarkCircleOutline,
+  closeCircleOutline,
+  keyOutline,
+  shieldCheckmarkOutline,
+  timeOutline,
+} from 'ionicons/icons';
+import * as QRCode from 'qrcode';
+import { AuthService } from '../../core/services/auth.service';
+import { CitasQrService } from '../../core/services/citas-qr.service';
+import { TotpService } from '../../core/services/totp.service';
+import { UsuarioSesion } from '../../models/consultorio.model';
+
+@Component({
+  selector: 'app-acceso-qr',
+  standalone: true,
+  imports: [
+    FormsModule,
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonContent,
+    IonSegment,
+    IonSegmentButton,
+    IonLabel,
+    IonCard,
+    IonCardHeader,
+    IonCardTitle,
+    IonCardSubtitle,
+    IonCardContent,
+    IonButton,
+    IonIcon,
+    IonItem,
+    IonInput,
+    IonList,
+    IonBadge,
+    IonProgressBar,
+  ],
+  template: `
+    <ion-header>
+      <ion-toolbar color="primary">
+        <ion-title>Acceso Puerta (QR TOTP)</ion-title>
+      </ion-toolbar>
+    </ion-header>
+
+    <ion-content class="ion-padding">
+      <ion-segment [(ngModel)]="modoVista" class="ion-margin-bottom">
+        <ion-segment-button value="mi-qr">
+          <ion-label>Mi QR Dinámico</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="escaner">
+          <ion-label>Escanear Puerta</ion-label>
+        </ion-segment-button>
+      </ion-segment>
+
+      <!-- MODO 1: CREDENCIAL QR DINÁMICA TOTP (SE RENUEVA CADA 30S) -->
+      @if (modoVista === 'mi-qr') {
+        <ion-card class="ion-text-center">
+          <ion-card-header>
+            <ion-card-title>Credencial Dinámica TOTP</ion-card-title>
+            <ion-card-subtitle>
+              Se renueva automáticamente cada 30 segundos por seguridad
+            </ion-card-subtitle>
+          </ion-card-header>
+
+          <ion-card-content>
+            @if (qrImagenUrl()) {
+              <div class="qr-wrapper">
+                <img [src]="qrImagenUrl()" alt="QR Dinámico TOTP" class="qr-img" />
+              </div>
+            }
+
+            <div class="otp-display">
+              <ion-icon name="shield-checkmark-outline" color="primary"></ion-icon>
+              <span>{{ codigoOtpActual() }}</span>
+            </div>
+
+            <div class="timer-box">
+              <div class="timer-texto">
+                <ion-icon name="time-outline"></ion-icon>
+                <span>Expira en <strong>{{ segundosRestantes() }}s</strong></span>
+              </div>
+              <ion-progress-bar
+                [value]="segundosRestantes() / 30"
+                [color]="segundosRestantes() <= 6 ? 'danger' : 'primary'"
+              ></ion-progress-bar>
+            </div>
+
+            <h2 class="ion-margin-top">{{ auth.usuarioActual()?.nombre }}</h2>
+            <ion-badge color="medium">{{ payloadQrActual() }}</ion-badge>
+          </ion-card-content>
+        </ion-card>
+      }
+
+      <!-- MODO 2: LECTOR Y VALIDACIÓN DE PUERTA -->
+      @if (modoVista === 'escaner') {
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>Validar QR de Acceso</ion-card-title>
+            <ion-card-subtitle>
+              Verifica el token TOTP vigente antes de accionar el servo
+            </ion-card-subtitle>
+          </ion-card-header>
+
+          <ion-card-content>
+            <ion-button
+              expand="block"
+              color="primary"
+              class="ion-margin-bottom"
+              (click)="escanearConCamara()"
+            >
+              <ion-icon slot="start" name="camera-outline"></ion-icon>
+              Escanear con Cámara
+            </ion-button>
+
+            <ion-item fill="outline" class="ion-margin-bottom">
+              <ion-input
+                label="Token QR (DENTISSA:ID:OTP)"
+                labelPlacement="floating"
+                [(ngModel)]="codigoManual"
+              ></ion-input>
+            </ion-item>
+
+            <ion-button
+              expand="block"
+              color="success"
+              (click)="activarPuertaConQr(codigoManual)"
+            >
+              <ion-icon slot="start" name="key-outline"></ion-icon>
+              Validar Token y Abrir Puerta
+            </ion-button>
+
+            @if (resultadoValidacion(); as res) {
+              <div
+                class="alerta-resultado"
+                [class.exito]="res.valido"
+                [class.error]="!res.valido"
+              >
+                <ion-icon
+                  [name]="res.valido ? 'checkmark-circle-outline' : 'close-circle-outline'"
+                ></ion-icon>
+                <span>{{ res.mensaje }}</span>
+              </div>
+            }
+          </ion-card-content>
+        </ion-card>
+
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>Simular Escaneo de Personal</ion-card-title>
+            <ion-card-subtitle>
+              Genera y escanea al instante el QR TOTP vigente de un empleado
+            </ion-card-subtitle>
+          </ion-card-header>
+          <ion-list>
+            @for (usr of auth.obtenerPersonalActivo(); track usr.id) {
+              <ion-item button (click)="simularEscaneoEmpleado(usr)">
+                <ion-label>
+                  <h2>{{ usr.nombre }}</h2>
+                  <p>ID: {{ usr.id }} • Secreto TOTP asignado</p>
+                </ion-label>
+                <ion-badge slot="end" color="primary">
+                  {{ usr.rol }}
+                </ion-badge>
+              </ion-item>
+            }
+          </ion-list>
+        </ion-card>
+      }
+    </ion-content>
+  `,
+  styles: [
+    `
+      .qr-img {
+        width: 220px;
+        height: 220px;
+        margin: 8px auto;
+        border: 4px solid var(--ion-color-primary);
+        border-radius: 14px;
+      }
+      .otp-display {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-size: 1.7rem;
+        font-weight: 800;
+        letter-spacing: 4px;
+        margin: 8px 0;
+        color: var(--ion-color-dark);
+      }
+      .timer-box {
+        max-width: 240px;
+        margin: 0 auto 12px;
+      }
+      .timer-texto {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        font-size: 0.9rem;
+        margin-bottom: 6px;
+        color: var(--ion-color-medium-shade);
+      }
+      .alerta-resultado {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 16px;
+        padding: 12px;
+        border-radius: 10px;
+        font-weight: 600;
+      }
+      .alerta-resultado.exito {
+        background: rgba(45, 211, 111, 0.15);
+        color: var(--ion-color-success-shade);
+      }
+      .alerta-resultado.error {
+        background: rgba(235, 68, 90, 0.15);
+        color: var(--ion-color-danger-shade);
+      }
+      .alerta-resultado ion-icon {
+        font-size: 1.6rem;
+        flex-shrink: 0;
+      }
+    `,
+  ],
+})
+export class AccesoQrPage implements OnInit, OnDestroy {
+  qrService = inject(CitasQrService);
+  auth = inject(AuthService);
+  totp = inject(TotpService);
+
+  modoVista: 'mi-qr' | 'escaner' = 'mi-qr';
+  codigoManual = '';
+
+  qrImagenUrl = signal<string>('');
+  codigoOtpActual = signal<string>('------');
+  payloadQrActual = signal<string>('');
+  segundosRestantes = signal<number>(30);
+  resultadoValidacion = signal<{ valido: boolean; mensaje: string } | null>(null);
+
+  private intervaloTimer: ReturnType<typeof setInterval> | null = null;
+  private ultimaVentanaGenerada = -1;
+
+  constructor() {
+    addIcons({
+      cameraOutline,
+      keyOutline,
+      checkmarkCircleOutline,
+      closeCircleOutline,
+      shieldCheckmarkOutline,
+      timeOutline,
+    });
+  }
+
+  async ngOnInit(): Promise<void> {
+    await this.actualizarCicloTotp(true);
+    this.intervaloTimer = setInterval(() => {
+      void this.actualizarCicloTotp(false);
+    }, 1000);
+  }
+
+  ngOnDestroy(): void {
+    if (this.intervaloTimer) {
+      clearInterval(this.intervaloTimer);
+    }
+  }
+
+  private async actualizarCicloTotp(forzar: boolean): Promise<void> {
+    const restantes = this.totp.obtenerSegundosRestantes();
+    this.segundosRestantes.set(restantes);
+
+    const ventanaActual = Math.floor(Date.now() / 1000 / this.totp.PERIODO_SEGUNDOS);
+    if (!forzar && ventanaActual === this.ultimaVentanaGenerada) {
+      return;
+    }
+
+    this.ultimaVentanaGenerada = ventanaActual;
+    const user = this.auth.usuarioActual();
+    if (!user) return;
+
+    const { payload, codigoOtp } = await this.totp.generarPayloadQr(
+      user.id,
+      user.totpSecret
+    );
+
+    this.codigoOtpActual.set(codigoOtp);
+    this.payloadQrActual.set(payload);
+    this.codigoManual = payload;
+
+    const url = await QRCode.toDataURL(payload, { width: 250, margin: 1 });
+    this.qrImagenUrl.set(url);
+  }
+
+  async escanearConCamara(): Promise<void> {
+    try {
+      const { barcodes } = await BarcodeScanner.scan();
+      if (barcodes.length > 0 && barcodes[0].rawValue) {
+        this.codigoManual = barcodes[0].rawValue;
+        await this.activarPuertaConQr(this.codigoManual);
+      }
+    } catch {
+      this.resultadoValidacion.set({
+        valido: false,
+        mensaje:
+          'Cámara nativa no disponible en navegador web. Usa el campo o la lista inferior.',
+      });
+    }
+  }
+
+  async simularEscaneoEmpleado(usuario: UsuarioSesion): Promise<void> {
+    const { payload } = await this.totp.generarPayloadQr(
+      usuario.id,
+      usuario.totpSecret
+    );
+    this.codigoManual = payload;
+    await this.activarPuertaConQr(payload);
+  }
+
+  async activarPuertaConQr(codigo: string): Promise<void> {
+    if (!codigo.trim()) return;
+    const res = await this.qrService.validarQrPuerta(codigo);
+    this.resultadoValidacion.set({
+      valido: res.valido,
+      mensaje: res.mensaje,
+    });
+  }
+}
+
+
+
+========================================
+ARCHIVO: src\app\pages\auditoria\auditoria.page.html
+========================================
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>auditoria</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large">auditoria</ion-title>
+    </ion-toolbar>
+  </ion-header>
+</ion-content>
+
+
+
+========================================
+ARCHIVO: src\app\pages\auditoria\auditoria.page.scss
+========================================
+
+
+========================================
+ARCHIVO: src\app\pages\auditoria\auditoria.page.spec.ts
+========================================
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { AuditoriaPage } from './auditoria.page';
+
+describe('AuditoriaPage', () => {
+  let component: AuditoriaPage;
+  let fixture: ComponentFixture<AuditoriaPage>;
+
+  beforeEach(() => {
+    fixture = TestBed.createComponent(AuditoriaPage);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+});
+
+
+
+========================================
+ARCHIVO: src\app\pages\auditoria\auditoria.page.ts
+========================================
+import { DatePipe } from '@angular/common';
+import { Component, inject } from '@angular/core';
+import {
+  IonBadge,
+  IonCard,
+  IonCardHeader,
+  IonCardSubtitle,
+  IonCardTitle,
+  IonContent,
+  IonHeader,
+  IonIcon,
+  IonItem,
+  IonLabel,
+  IonList,
+  IonNote,
+  IonTitle,
+  IonToolbar,
+} from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { timeOutline } from 'ionicons/icons';
+import { ConsultorioService } from '../../core/services/consultorio.service';
+
+@Component({
+  selector: 'app-auditoria',
+  standalone: true,
+  imports: [
+    DatePipe,
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonContent,
+    IonCard,
+    IonCardHeader,
+    IonCardTitle,
+    IonCardSubtitle,
+    IonList,
+    IonItem,
+    IonLabel,
+    IonBadge,
+    IonNote,
+    IonIcon,
+  ],
+  template: `
+    <ion-header>
+      <ion-toolbar color="primary">
+        <ion-title>Auditoría y Eventos</ion-title>
+      </ion-toolbar>
+    </ion-header>
+
+    <ion-content class="ion-padding">
+      <ion-card>
+        <ion-card-header>
+          <ion-card-title>Bitácora de Operaciones</ion-card-title>
+          <ion-card-subtitle>
+            Registro de accesos QR, cambios manuales y reinicios ({{ consultorio.auditoria().length }} eventos)
+          </ion-card-subtitle>
+        </ion-card-header>
+
+        <ion-list>
+          @for (log of consultorio.auditoria(); track log.id) {
+            <ion-item>
+              <ion-icon slot="start" name="time-outline" color="primary"></ion-icon>
+              <ion-label>
+                <h2>{{ log.accion }}</h2>
+                <p>Por: <strong>{{ log.usuarioNombre }}</strong></p>
+                <ion-badge color="light">{{ log.dispositivo }}</ion-badge>
+              </ion-label>
+              <ion-note slot="end">
+                {{ log.fechaHora | date: 'shortTime' }}
+              </ion-note>
+            </ion-item>
+          }
+        </ion-list>
+      </ion-card>
+    </ion-content>
+  `,
+})
+export class AuditoriaPage {
+  consultorio = inject(ConsultorioService);
+
+  constructor() {
+    addIcons({ timeOutline });
+  }
+}
+
+
+
+========================================
+ARCHIVO: src\app\pages\control-manual\control-manual.page.html
+========================================
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>control-manual</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large">control-manual</ion-title>
+    </ion-toolbar>
+  </ion-header>
+</ion-content>
+
+
+
+========================================
+ARCHIVO: src\app\pages\control-manual\control-manual.page.scss
+========================================
+
+
+========================================
+ARCHIVO: src\app\pages\control-manual\control-manual.page.spec.ts
+========================================
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ControlManualPage } from './control-manual.page';
+
+describe('ControlManualPage', () => {
+  let component: ControlManualPage;
+  let fixture: ComponentFixture<ControlManualPage>;
+
+  beforeEach(() => {
+    fixture = TestBed.createComponent(ControlManualPage);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+});
+
+
+
+========================================
+ARCHIVO: src\app\pages\control-manual\control-manual.page.ts
+========================================
+import { Component, inject } from '@angular/core';
+import {
+  IonButton,
+  IonCard,
+  IonCardContent,
+  IonCardHeader,
+  IonCardSubtitle,
+  IonCardTitle,
+  IonContent,
+  IonHeader,
+  IonIcon,
+  IonItemDivider,
+  IonLabel,
+  IonTitle,
+  IonToolbar,
+} from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { lockOpenOutline, refreshOutline, syncOutline } from 'ionicons/icons';
+import { ControlActuadorComponent } from '../../components/control-actuador/control-actuador.component';
+import { AuthService } from '../../core/services/auth.service';
+import { ConsultorioService } from '../../core/services/consultorio.service';
+
+@Component({
+  selector: 'app-control-manual',
+  standalone: true,
+  imports: [
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonContent,
+    IonCard,
+    IonCardHeader,
+    IonCardTitle,
+    IonCardSubtitle,
+    IonCardContent,
+    IonButton,
+    IonIcon,
+    IonItemDivider,
+    IonLabel,
+    ControlActuadorComponent,
+  ],
+  template: `
+    <ion-header class="ion-no-border">
+      <ion-toolbar color="primary">
+        <ion-title>Control Manual</ion-title>
+      </ion-toolbar>
+    </ion-header>
+
+    <ion-content class="control-content">
+      <!-- ACCESO Y TURNO EN FILA COMPACTA -->
+      <ion-card class="compact-card">
+        <ion-card-header>
+          <ion-card-title>Acceso y Turno</ion-card-title>
+          <ion-card-subtitle>Operador: {{ auth.usuarioActual()?.nombre || 'Recepción' }}</ion-card-subtitle>
+        </ion-card-header>
+        <ion-card-content>
+          <ion-button
+            expand="block"
+            color="success"
+            class="ion-margin-bottom"
+            (click)="consultorio.abrirPuertaPorQr(auth.usuarioActual()?.nombre || 'Recepción', 'PERSONAL', 'MANUAL_APP')"
+          >
+            <ion-icon slot="start" name="lock-open-outline"></ion-icon>
+            Abrir Puerta Principal (Servo 4s)
+          </ion-button>
+
+          <div class="acciones-grid">
+            <ion-button size="small" color="primary" (click)="consultorio.restablecerTodoAuto()">
+              <ion-icon slot="start" name="sync-outline"></ion-icon>
+              Todo a AUTO
+            </ion-button>
+
+            <ion-button size="small" fill="outline" color="danger" (click)="consultorio.reiniciarAforo()">
+              <ion-icon slot="start" name="refresh-outline"></ion-icon>
+              Aforo a 0
+            </ion-button>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-item-divider>
+        <ion-label>Iluminación Principal</ion-label>
+      </ion-item-divider>
+
+      <app-control-actuador
+        [actuador]="consultorio.telemetria().luces"
+        (modoChange)="consultorio.cambiarModoActuador('LUCES', $event)"
+      ></app-control-actuador>
+
+      <ion-item-divider>
+        <ion-label>Ventilación por Zonas (4 Motores)</ion-label>
+      </ion-item-divider>
+
+      <!-- CUADRÍCULA 2x2 PARA LOS 4 VENTILADORES -->
+      <div class="ventiladores-grid">
+        @for (vent of consultorio.telemetria().ventiladores; track vent.id) {
+          <app-control-actuador
+            [actuador]="vent"
+            (modoChange)="consultorio.cambiarModoActuador(vent.id, $event)"
+          ></app-control-actuador>
+        }
+      </div>
+    </ion-content>
+  `,
+  styles: [
+    `
+      .control-content {
+        --background: #f4f6fa;
+        --padding-start: 12px;
+        --padding-end: 12px;
+        --padding-top: 10px;
+        --padding-bottom: 20px;
+      }
+      .compact-card {
+        margin: 0 0 10px 0;
+        border-radius: 14px;
+      }
+      .acciones-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .ventiladores-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+      }
+    `,
+  ],
+})
+export class ControlManualPage {
+  consultorio = inject(ConsultorioService);
+  auth = inject(AuthService);
+
+  constructor() {
+    addIcons({ syncOutline, refreshOutline, lockOpenOutline });
+  }
+}
+
+
+
+========================================
+ARCHIVO: src\app\pages\dashboard\dashboard.page.html
+========================================
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>dashboard</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large">dashboard</ion-title>
+    </ion-toolbar>
+  </ion-header>
+</ion-content>
+
+
+
+========================================
+ARCHIVO: src\app\pages\dashboard\dashboard.page.scss
+========================================
+
+
+========================================
+ARCHIVO: src\app\pages\dashboard\dashboard.page.spec.ts
+========================================
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { DashboardPage } from './dashboard.page';
+
+describe('DashboardPage', () => {
+  let component: DashboardPage;
+  let fixture: ComponentFixture<DashboardPage>;
+
+  beforeEach(() => {
+    fixture = TestBed.createComponent(DashboardPage);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+});
+
+
+
+========================================
+ARCHIVO: src\app\pages\dashboard\dashboard.page.ts
+========================================
+import { UpperCasePipe } from '@angular/common';
+import { Component, inject } from '@angular/core';
+import { Router } from '@angular/router';
+import {
+  IonButton,
+  IonButtons,
+  IonContent,
+  IonHeader,
+  IonIcon,
+  IonTitle,
+  IonToolbar,
+} from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import {
+  bulb,
+  bulbOutline,
+  lockClosedOutline,
+  lockOpenOutline,
+  logOutOutline,
+  peopleOutline,
+} from 'ionicons/icons';
+import { MapaAsientosComponent } from '../../components/mapa-asientos/mapa-asientos.component';
+import { AuthService } from '../../core/services/auth.service';
+import { ConsultorioService } from '../../core/services/consultorio.service';
+
+@Component({
+  selector: 'app-dashboard',
+  standalone: true,
+  imports: [
+    UpperCasePipe,
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonButtons,
+    IonButton,
+    IonIcon,
+    IonContent,
+    MapaAsientosComponent,
+  ],
+  template: `
+    <ion-header class="ion-no-border">
+      <ion-toolbar color="primary">
+        <ion-title>Dentissa â€¢ Monitor</ion-title>
+        <ion-buttons slot="end">
+          <ion-button fill="clear" (click)="salir()">
+            <ion-icon slot="start" name="log-out-outline"></ion-icon>
+            {{ auth.usuarioActual()?.rol | uppercase }}
+          </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+
+    <ion-content class="dashboard-content">
+      <!-- RESUMEN COMPACTO DE 3 INDICADORES EN UNA FILA -->
+      <div class="kpi-strip">
+        <!-- 1. Aforo calculado por asientos ocupados -->
+        <div class="kpi-pill">
+          <div class="kpi-icon-wrap kpi-primary">
+            <ion-icon name="people-outline"></ion-icon>
+          </div>
+          <div class="kpi-dato">
+            {{ consultorio.telemetria().aforoActual }}/{{ consultorio.telemetria().capacidadMaxima }}
+          </div>
+          <div class="kpi-titulo">Aforo Sala</div>
+        </div>
+
+        <!-- 2. Estado de puerta -->
+        <div class="kpi-pill">
+          <div
+            class="kpi-icon-wrap"
+            [class.kpi-success]="consultorio.telemetria().puertaAbierta"
+            [class.kpi-neutral]="!consultorio.telemetria().puertaAbierta"
+          >
+            <ion-icon
+              [name]="consultorio.telemetria().puertaAbierta ? 'lock-open-outline' : 'lock-closed-outline'"
+            ></ion-icon>
+          </div>
+          <div class="kpi-dato">
+            {{ consultorio.telemetria().puertaAbierta ? 'Abierta' : 'Cerrada' }}
+          </div>
+          <div class="kpi-titulo">Puerta</div>
+        </div>
+
+        <!-- 3. Estado y control rÃ¡pido de Tira LED -->
+        <div
+          class="kpi-pill kpi-clickable"
+          [class.kpi-led-active]="consultorio.telemetria().luces.encendido"
+          (click)="consultorio.toggleLuces()"
+        >
+          <div
+            class="kpi-icon-wrap"
+            [class.kpi-warning]="consultorio.telemetria().luces.encendido"
+            [class.kpi-neutral]="!consultorio.telemetria().luces.encendido"
+          >
+            <ion-icon
+              [name]="consultorio.telemetria().luces.encendido ? 'bulb' : 'bulb-outline'"
+            ></ion-icon>
+          </div>
+          <div class="kpi-dato">
+            {{ consultorio.telemetria().luces.encendido ? 'Encendida' : 'Apagada' }}
+          </div>
+          <div class="kpi-titulo kpi-accion-led">
+            {{ consultorio.telemetria().luces.encendido ? 'Tocar: Apagar' : 'Enciende con QR' }}
+          </div>
+        </div>
+      </div>
+
+      <!-- MAPA DE LOS 6 ASIENTOS Y 4 VENTILADORES -->
+      <app-mapa-asientos
+        [asientos]="consultorio.telemetria().asientos"
+        [ventiladores]="consultorio.telemetria().ventiladores"
+        (asientoClick)="consultorio.toggleSimularAsiento($event)"
+      ></app-mapa-asientos>
+    </ion-content>
+  `,
+  styles: [
+    `
+      .dashboard-content {
+        --background: #f4f6fa;
+        --padding-start: 12px;
+        --padding-end: 12px;
+        --padding-top: 12px;
+        --padding-bottom: 16px;
+      }
+      .kpi-strip {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+      .kpi-pill {
+        background: #ffffff;
+        border-radius: 14px;
+        padding: 10px 6px;
+        text-align: center;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border: 1.5px solid transparent;
+        transition: transform 0.12s ease, border-color 0.2s ease, background 0.2s ease;
+      }
+      .kpi-clickable {
+        cursor: pointer;
+      }
+      .kpi-clickable:active {
+        transform: scale(0.96);
+      }
+      .kpi-led-active {
+        border-color: rgba(255, 196, 9, 0.75);
+        background: #fffdf5;
+      }
+      .kpi-icon-wrap {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        margin-bottom: 6px;
+      }
+      .kpi-primary {
+        background: rgba(56, 128, 255, 0.14);
+        color: var(--ion-color-primary);
+      }
+      .kpi-success {
+        background: rgba(45, 211, 111, 0.16);
+        color: var(--ion-color-success-shade);
+      }
+      .kpi-warning {
+        background: rgba(255, 196, 9, 0.24);
+        color: #b58100;
+      }
+      .kpi-neutral {
+        background: rgba(146, 148, 156, 0.15);
+        color: var(--ion-color-medium-shade);
+      }
+      .kpi-dato {
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: var(--ion-color-dark);
+        line-height: 1.1;
+      }
+      .kpi-titulo {
+        font-size: 0.68rem;
+        font-weight: 600;
+        color: var(--ion-color-medium);
+        margin-top: 3px;
+      }
+      .kpi-led-active .kpi-accion-led {
+        color: #b58100;
+        font-weight: 700;
+      }
+    `,
+  ],
+})
+export class DashboardPage {
+  consultorio = inject(ConsultorioService);
+  auth = inject(AuthService);
+  private router = inject(Router);
+
+  constructor() {
+    addIcons({
+      logOutOutline,
+      peopleOutline,
+      lockOpenOutline,
+      lockClosedOutline,
+      bulb,
+      bulbOutline,
+    });
+  }
+
+  salir(): void {
+    this.auth.cerrarSesion();
+    this.router.navigateByUrl('/login');
+  }
+}
+
+
+
+========================================
+ARCHIVO: src\app\pages\login\login.page.html
+========================================
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>login</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large">login</ion-title>
+    </ion-toolbar>
+  </ion-header>
+</ion-content>
+
+
+
+========================================
+ARCHIVO: src\app\pages\login\login.page.scss
+========================================
+
+
+========================================
+ARCHIVO: src\app\pages\login\login.page.spec.ts
+========================================
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { LoginPage } from './login.page';
+
+describe('LoginPage', () => {
+  let component: LoginPage;
+  let fixture: ComponentFixture<LoginPage>;
+
+  beforeEach(() => {
+    fixture = TestBed.createComponent(LoginPage);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+});
+
+
+
+========================================
+ARCHIVO: src\app\pages\login\login.page.ts
+========================================
+import { Component, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import {
+  IonButton,
+  IonContent,
+  IonIcon,
+  IonSpinner,
+} from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import {
+  arrowForwardOutline,
+  eyeOffOutline,
+  eyeOutline,
+  lockClosedOutline,
+  medkitOutline,
+  shieldCheckmarkOutline,
+} from 'ionicons/icons';
+import { AuthService } from '../../core/services/auth.service';
+
+@Component({
+  selector: 'app-login',
+  standalone: true,
+  imports: [
+    FormsModule,
+    IonContent,
+    IonButton,
+    IonIcon,
+    IonSpinner,
+  ],
+  template: `
+    <ion-content class="login-content">
+      <div class="page-center">
+        <div class="split-card">
+          <!-- PANEL IZQUIERDO EDITORIAL -->
+          <div class="left-panel">
+            <div class="brand-header">
+              <div class="brand-logo">
+                <ion-icon name="medkit-outline"></ion-icon>
+              </div>
+              <div>
+                <div class="brand-name">DENTISA</div>
+                <div class="brand-tag">ODONTOLOGÍA INTEGRAL &amp; IoT</div>
+              </div>
+            </div>
+
+            <div class="hero-copy">
+              <div class="pill-badge">
+                <span class="pill-dot"></span>
+                <span>ESPACIO DE TRABAJO DENTISA</span>
+              </div>
+              <h1>Cada cita merece una atención bien coordinada.</h1>
+              <p>
+                Control inteligente de sala de espera, ventilación, iluminación y acceso QR para el equipo clínico.
+              </p>
+            </div>
+
+            <div class="left-footer">
+              <ion-icon name="lock-closed-outline"></ion-icon>
+              <span>Acceso privado del consultorio</span>
+            </div>
+          </div>
+
+          <!-- PANEL DERECHO FORMULARIO -->
+          <div class="right-panel">
+            <div class="form-container">
+              <div class="eyebrow">
+                <span class="line"></span>
+                <span>ACCESO PROFESIONAL</span>
+              </div>
+
+              <h2>Hola de nuevo</h2>
+
+              <div class="field-group">
+                <label for="emailInput">Correo electrónico</label>
+                <div class="input-box">
+                  <input
+                    id="emailInput"
+                    type="email"
+                    placeholder="nombre@consultorio.com"
+                    autocomplete="email"
+                    [(ngModel)]="email"
+                    (keyup.enter)="entrar()"
+                  />
+                </div>
+              </div>
+
+              <div class="field-group">
+                <label for="passInput">Contraseña</label>
+                <div class="input-box">
+                  <input
+                    id="passInput"
+                    [type]="verPassword() ? 'text' : 'password'"
+                    placeholder="••••••••••••"
+                    autocomplete="current-password"
+                    [(ngModel)]="password"
+                    (keyup.enter)="entrar()"
+                  />
+                  <button
+                    type="button"
+                    class="eye-btn"
+                    (click)="verPassword.set(!verPassword())"
+                    aria-label="Mostrar u ocultar contraseña"
+                  >
+                    <ion-icon [name]="verPassword() ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+                  </button>
+                </div>
+              </div>
+
+              @if (errorMsg()) {
+                <div class="error-banner">{{ errorMsg() }}</div>
+              }
+
+              <ion-button
+                expand="block"
+                class="submit-btn"
+                [disabled]="cargando()"
+                (click)="entrar()"
+              >
+                @if (cargando()) {
+                  <ion-spinner name="crescent" class="btn-spin"></ion-spinner>
+                  <span>Verificando...</span>
+                } @else {
+                  <span>Iniciar sesión</span>
+                  <ion-icon slot="end" name="arrow-forward-outline"></ion-icon>
+                }
+              </ion-button>
+
+              <div class="security-note">
+                <ion-icon name="shield-checkmark-outline"></ion-icon>
+                <span>Tu información está protegida y solo es visible para usuarios autorizados.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ion-content>
+  `,
+  styles: [
+    `
+      .login-content {
+        --background: #f5ecee;
+      }
+      .page-center {
+        min-height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 18px;
+      }
+      .split-card {
+        width: 100%;
+        max-width: 920px;
+        background: #ffffff;
+        border-radius: 24px;
+        overflow: hidden;
+        display: grid;
+        grid-template-columns: 1fr;
+        box-shadow: 0 20px 50px rgba(92, 34, 52, 0.12);
+        border: 1px solid #ecd9dd;
+      }
+      @media (min-width: 780px) {
+        .split-card {
+          grid-template-columns: 1.02fr 1fr;
+          min-height: 540px;
+        }
+      }
+
+      /* PANEL IZQUIERDO */
+      .left-panel {
+        background: linear-gradient(155deg, #6e233b 0%, #9c3353 52%, #b84b6b 100%);
+        color: #ffffff;
+        padding: 28px 26px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 24px;
+        position: relative;
+      }
+      .brand-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .brand-logo {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: #ffffff;
+        color: #9c3353;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.35rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        flex-shrink: 0;
+      }
+      .brand-name {
+        font-size: 1.25rem;
+        font-weight: 800;
+        letter-spacing: 1px;
+        line-height: 1.1;
+      }
+      .brand-tag {
+        font-size: 0.65rem;
+        font-weight: 700;
+        letter-spacing: 1.2px;
+        opacity: 0.88;
+        margin-top: 2px;
+      }
+      .hero-copy {
+        margin: auto 0;
+      }
+      .pill-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        background: rgba(255, 255, 255, 0.16);
+        backdrop-filter: blur(6px);
+        padding: 5px 12px;
+        border-radius: 999px;
+        font-size: 0.64rem;
+        font-weight: 800;
+        letter-spacing: 0.9px;
+        margin-bottom: 14px;
+      }
+      .pill-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #ffb3c6;
+      }
+      .hero-copy h1 {
+        font-family: Georgia, 'Times New Roman', serif;
+        font-size: 1.75rem;
+        font-weight: 700;
+        line-height: 1.2;
+        margin: 0 0 12px;
+        color: #ffffff;
+      }
+      @media (min-width: 780px) {
+        .hero-copy h1 {
+          font-size: 2.05rem;
+        }
+      }
+      .hero-copy p {
+        font-size: 0.84rem;
+        line-height: 1.5;
+        color: rgba(255, 255, 255, 0.88);
+        margin: 0;
+      }
+      .left-footer {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.76rem;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.88);
+      }
+
+      /* PANEL DERECHO */
+      .right-panel {
+        padding: 32px 26px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #ffffff;
+      }
+      @media (min-width: 780px) {
+        .right-panel {
+          padding: 40px 44px;
+        }
+      }
+      .form-container {
+        width: 100%;
+        max-width: 340px;
+      }
+      .eyebrow {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.68rem;
+        font-weight: 800;
+        letter-spacing: 1.3px;
+        color: #9c3353;
+        margin-bottom: 8px;
+      }
+      .eyebrow .line {
+        width: 18px;
+        height: 1.5px;
+        background: #9c3353;
+      }
+      .form-container h2 {
+        font-family: Georgia, 'Times New Roman', serif;
+        font-size: 1.85rem;
+        font-weight: 700;
+        color: #1f1719;
+        margin: 0 0 22px;
+      }
+      .field-group {
+        margin-bottom: 16px;
+      }
+      .field-group label {
+        display: block;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #3a2d30;
+        margin-bottom: 6px;
+      }
+      .input-box {
+        display: flex;
+        align-items: center;
+        border: 1.5px solid #e2cdd2;
+        border-radius: 12px;
+        background: #fdfafb;
+        padding: 0 12px;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+      .input-box:focus-within {
+        border-color: #a83256;
+        background: #ffffff;
+        box-shadow: 0 0 0 3px rgba(168, 50, 86, 0.12);
+      }
+      .input-box input {
+        flex: 1;
+        border: none;
+        background: transparent;
+        padding: 12px 4px;
+        font-size: 0.88rem;
+        color: #1f1719;
+        outline: none;
+      }
+      .input-box input::placeholder {
+        color: #a8969a;
+      }
+      .eye-btn {
+        background: transparent;
+        border: none;
+        color: #7d686c;
+        font-size: 1.15rem;
+        padding: 4px;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+      }
+      .error-banner {
+        background: #fde8ec;
+        border: 1px solid #f5b7c3;
+        color: #9e1c34;
+        font-size: 0.76rem;
+        font-weight: 700;
+        padding: 9px 12px;
+        border-radius: 10px;
+        margin-bottom: 14px;
+        line-height: 1.35;
+      }
+      .submit-btn {
+        --background: #a83256;
+        --background-hover: #8f2646;
+        --border-radius: 999px;
+        --box-shadow: 0 8px 20px rgba(168, 50, 86, 0.28);
+        height: 46px;
+        font-weight: 700;
+        font-size: 0.88rem;
+        text-transform: none;
+        margin: 8px 0 18px;
+      }
+      .btn-spin {
+        width: 18px;
+        height: 18px;
+        margin-right: 8px;
+      }
+      .security-note {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        font-size: 0.72rem;
+        line-height: 1.4;
+        color: #6e5c60;
+      }
+      .security-note ion-icon {
+        color: #1e8e54;
+        font-size: 1rem;
+        flex-shrink: 0;
+        margin-top: 1px;
+      }
+    `,
+  ],
+})
+export class LoginPage {
+  private auth = inject(AuthService);
+  private router = inject(Router);
+
+  email = '';
+  password = '';
+  verPassword = signal<boolean>(false);
+  cargando = signal<boolean>(false);
+  errorMsg = signal<string>('');
+
+  constructor() {
+    addIcons({
+      medkitOutline,
+      lockClosedOutline,
+      eyeOutline,
+      eyeOffOutline,
+      arrowForwardOutline,
+      shieldCheckmarkOutline,
+    });
+  }
+
+  async entrar(): Promise<void> {
+    if (this.cargando()) return;
+    this.errorMsg.set('');
+    this.cargando.set(true);
+
+    const res = await this.auth.iniciarSesion(this.email, this.password);
+    this.cargando.set(false);
+
+    if (res.ok) {
+      this.router.navigateByUrl('/tabs/sala');
+    } else {
+      this.errorMsg.set(res.mensaje || 'No se pudo iniciar sesión.');
+    }
+  }
+}
+
+
+
+========================================
+ARCHIVO: src\app\pages\qr-acceso\qr-acceso.page.ts
+========================================
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import {
+  IonButton,
+  IonContent,
+  IonHeader,
+  IonIcon,
+  IonLabel,
+  IonSegment,
+  IonSegmentButton,
+  IonTitle,
+  IonToolbar,
+} from '@ionic/angular/standalone';
+import { Html5Qrcode } from 'html5-qrcode';
+import { addIcons } from 'ionicons';
+import {
+  cameraOutline,
+  checkmarkCircleOutline,
+  closeCircleOutline,
+  qrCodeOutline,
+  stopCircleOutline,
+  timeOutline,
+} from 'ionicons/icons';
+import * as QRCode from 'qrcode';
+import { AuthService } from '../../core/services/auth.service';
+import { ConsultorioService } from '../../core/services/consultorio.service';
+
+@Component({
+  selector: 'app-qr-acceso',
+  standalone: true,
+  imports: [
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonContent,
+    IonButton,
+    IonIcon,
+    IonSegment,
+    IonSegmentButton,
+    IonLabel,
+  ],
+  template: `
+    <ion-header class="ion-no-border">
+      <ion-toolbar style="--background: #B01E53; --color: #FFFFFF;">
+        <ion-title>Acceso QR â€¢ Puerta Principal</ion-title>
+      </ion-toolbar>
+    </ion-header>
+
+    <ion-content class="qr-content">
+      <div class="segment-wrap">
+        <ion-segment mode="ios" [value]="vistaActiva()" (ionChange)="cambiarVista($event)">
+          <ion-segment-button value="mi-qr">
+            <ion-icon name="qr-code-outline"></ion-icon>
+            <ion-label>Mi QR de Acceso</ion-label>
+          </ion-segment-button>
+          <ion-segment-button value="escaner">
+            <ion-icon name="camera-outline"></ion-icon>
+            <ion-label>CÃ¡mara Puerta</ion-label>
+          </ion-segment-button>
+        </ion-segment>
+      </div>
+      <div class="scanner-wrapper">
+        @if (vistaActiva() === 'credencial') {
+          <div class="scanner-card">
+            <div class="card-title">Credencial QR DinÃ¡mica</div>
+            <p class="card-sub">
+              Presenta este cÃ³digo ante el lector del consultorio. Se renueva automÃ¡ticamente cada minuto.
+            </p>
+
+            <div class="qr-dynamic-box">
+              @if (qrDataUrl()) {
+                <img [src]="qrDataUrl()" alt="CÃ³digo QR dinÃ¡mico de acceso" class="qr-image" />
+              }
+            </div>
+
+            <div class="user-pill">
+              <strong>{{ auth.usuarioActual()?.nombre || 'Personal Dentissa' }}</strong>
+              <span>{{ etiquetaRol() }}</span>
+            </div>
+
+            <div class="countdown-box">
+              <div class="countdown-header">
+                <span class="countdown-label">
+                  <ion-icon name="time-outline"></ion-icon>
+                  RenovaciÃ³n automÃ¡tica en
+                </span>
+                <span class="countdown-seconds">{{ segundosRestantes() }}s</span>
+              </div>
+              <div class="progress-track">
+                <div
+                  class="progress-fill"
+                  [style.width.%]="(segundosRestantes() / 60) * 100"
+                ></div>
+              </div>
+            </div>
+          </div>
+        } @else {
+          <div class="scanner-card">
+            <div class="card-title">EscÃ¡ner de Entrada</div>
+            <p class="card-sub">
+              Apunta el cÃ³digo QR de la cita o credencial a la cÃ¡mara para validar y abrir la puerta.
+            </p>
+
+            <div class="camera-frame">
+              <div id="qr-reader" class="qr-reader-box"></div>
+              @if (!escaneando()) {
+                <div class="camera-placeholder">
+                  <ion-icon name="camera-outline"></ion-icon>
+                  <span>CÃ¡mara en espera</span>
+                </div>
+              }
+            </div>
+
+            @if (estadoMensaje()) {
+              <div
+                class="status-banner"
+                [class.status-ok]="estadoTipo() === 'ok'"
+                [class.status-err]="estadoTipo() === 'err'"
+              >
+                <ion-icon
+                  [name]="estadoTipo() === 'ok' ? 'checkmark-circle-outline' : 'close-circle-outline'"
+                ></ion-icon>
+                <span>{{ estadoMensaje() }}</span>
+              </div>
+            }
+
+            @if (!escaneando()) {
+              <ion-button expand="block" color="primary" class="cam-btn" style="--background: #B01E53; --background-activated: #8d2045; --color: #ffffff;" (click)="iniciarCamara()">
+                <ion-icon slot="start" name="camera-outline"></ion-icon>
+                ACTIVAR CÃMARA QR
+              </ion-button>
+            } @else {
+              <ion-button expand="block" color="medium" fill="outline" class="cam-btn" style="--background: #B01E53; --background-activated: #8d2045; --color: #ffffff;" (click)="detenerCamara()">
+                <ion-icon slot="start" name="stop-circle-outline"></ion-icon>
+                DETENER CÃMARA
+              </ion-button>
+            }
+          </div>
+        }
+      </div>
+    </ion-content>
+  `,
+  styles: [
+    `
+      .segment-toolbar {
+        --background: #FFFFFF;
+        padding: 8px 16px 10px;
+        border-bottom: 1px solid #e7ccd2;
+      }
+      ion-segment {
+        --background: #F7E6EA;
+        border: 1px solid #f1dce1;
+        border-radius: 999px;
+        padding: 3px;
+        max-width: 520px;
+        margin: 0 auto;
+      }
+      ion-segment-button {
+        --indicator-color: #B01E53;
+        --border-radius: 999px;
+        --color: #6f5c60;
+        --color-checked: #ffffff;
+        font-weight: 700;
+        font-size: 0.8rem;
+        min-height: 36px;
+        text-transform: none;
+        letter-spacing: 0;
+      }
+      ion-segment-button.segment-button-checked {
+        color: #ffffff !important;
+      }
+      .qr-content {
+        --background: #F9F7F4;
+        --padding-start: 14px;
+        --padding-end: 14px;
+        --padding-top: 16px;
+        --padding-bottom: 24px;
+      }
+      .scanner-wrapper {
+        max-width: 520px;
+        margin: 0 auto;
+      }
+      .scanner-card {
+        background: #ffffff;
+        border: 1px solid #f1e2e5;
+        border-radius: 16px;
+        padding: 18px;
+        box-shadow: 0 4px 14px rgba(168, 50, 86, 0.06);
+        text-align: center;
+      }
+      .card-title {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #22181a;
+      }
+      .card-sub {
+        font-size: 0.78rem;
+        color: #6f5c60;
+        margin: 6px 0 14px;
+      }
+      .qr-dynamic-box {
+        width: 240px;
+        height: 240px;
+        margin: 0 auto 14px;
+        padding: 12px;
+        border-radius: 16px;
+        background: #ffffff;
+        border: 2px solid #f1e2e5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .qr-image {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+      }
+      .user-pill {
+        display: inline-flex;
+        flex-direction: column;
+        gap: 2px;
+        background: #fdf7f6;
+        border: 1px solid #f1e2e5;
+        border-radius: 12px;
+        padding: 8px 16px;
+        margin-bottom: 14px;
+        font-size: 0.82rem;
+        color: #22181a;
+      }
+      .user-pill span {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #B01E53;
+      }
+      .countdown-box {
+        background: #fdf7f6;
+        border: 1px solid #f1e2e5;
+        border-radius: 12px;
+        padding: 10px 14px;
+      }
+      .countdown-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 0.78rem;
+        margin-bottom: 6px;
+      }
+      .countdown-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        color: #6f5c60;
+        font-weight: 600;
+      }
+      .countdown-seconds {
+        font-weight: 800;
+        color: #B01E53;
+        font-variant-numeric: tabular-nums;
+      }
+      .progress-track {
+        width: 100%;
+        height: 6px;
+        background: #f1e2e5;
+        border-radius: 999px;
+        overflow: hidden;
+      }
+      .progress-fill {
+        height: 100%;
+        background: #B01E53;
+        transition: width 0.35s linear;
+      }
+      .camera-frame {
+        position: relative;
+        width: 100%;
+        min-height: 270px;
+        border-radius: 14px;
+        overflow: hidden;
+        background: #1c1618;
+        border: 2px solid #f1e2e5;
+        margin-bottom: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .qr-reader-box {
+        width: 100%;
+      }
+      .camera-placeholder {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        color: #d9b6bd;
+        font-size: 0.85rem;
+        font-weight: 700;
+      }
+      .camera-placeholder ion-icon {
+        font-size: 2.6rem;
+        color: #B01E53;
+      }
+      .status-banner {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        font-size: 0.8rem;
+        font-weight: 800;
+        margin-bottom: 12px;
+      }
+      .status-ok {
+        background: #e6f9ee;
+        border: 1px solid #a3e4bf;
+        color: #167940;
+      }
+      .status-err {
+        background: #fde8ec;
+        border: 1px solid #f5b7c3;
+        color: #9e1c38;
+      }
+      .cam-btn {
+        --border-radius: 12px;
+        font-weight: 800;
+        height: 46px;
+      }
+    `,
+  ],
+})
+export class QrAccesoPage implements OnInit, OnDestroy {
+  readonly auth = inject(AuthService);
+  readonly etiquetaRol = computed(() => {
+    const u = this.auth.usuarioActual();
+    if (u?.rol_etiqueta) return u.rol_etiqueta;
+    if (u?.rol === 'super_admin') return 'Doctora titular';
+    if (u?.rol === 'doctor') return 'Doctor';
+    return 'Asistente';
+  });
+  private consultorio = inject(ConsultorioService);
+  private html5Qr: Html5Qrcode | null = null;
+  private procesando = false;
+  private timerInterval: ReturnType<typeof setInterval> | null = null;
+  private ultimoMinutoGenerado = -1;
+
+  vistaActiva = signal<'credencial' | 'escaner'>('credencial');
+  qrDataUrl = signal<string>('');
+  segundosRestantes = signal<number>(60);
+
+  escaneando = signal(false);
+  estadoMensaje = signal('');
+  estadoTipo = signal<'ok' | 'err' | ''>('');
+
+  constructor() {
+    addIcons({
+      qrCodeOutline,
+      cameraOutline,
+      stopCircleOutline,
+      checkmarkCircleOutline,
+      closeCircleOutline,
+      timeOutline,
+    });
+  }
+
+  ngOnInit(): void {
+    this.actualizarCicloQr();
+    this.timerInterval = setInterval(() => {
+      this.actualizarCicloQr();
+    }, 1000);
+  }
+
+  private async actualizarCicloQr(): Promise<void> {
+    const ahoraSeg = Math.floor(Date.now() / 1000);
+    const minutoActual = Math.floor(ahoraSeg / 60);
+    const restantes = 60 - (ahoraSeg % 60);
+    this.segundosRestantes.set(restantes);
+
+    if (minutoActual !== this.ultimoMinutoGenerado) {
+      this.ultimoMinutoGenerado = minutoActual;
+      await this.generarQrDinamico(minutoActual);
+    }
+  }
+
+  private async generarQrDinamico(ventanaMinuto: number): Promise<void> {
+    const user = this.auth.usuarioActual();
+    const uid = Number(user?.id) || 0;
+    const rol = (user?.rol ?? 'staff').toUpperCase();
+    const firma = ((uid * 7919 + ventanaMinuto * 104729) >>> 0).toString(16).toUpperCase().padStart(8, '0');
+    const payload = `DENTISSA-STAFF:${uid}:${rol}:${ventanaMinuto}:${firma}`;
+
+    try {
+      const url = await QRCode.toDataURL(payload, {
+        width: 260,
+        margin: 1,
+        color: {
+          dark: '#22181a',
+          light: '#ffffff',
+        },
+      });
+      this.qrDataUrl.set(url);
+    } catch {}
+  }
+
+  async cambiarVista(event: CustomEvent): Promise<void> {
+    const nuevaVista = event.detail?.value as 'credencial' | 'escaner';
+    if (!nuevaVista || nuevaVista === this.vistaActiva()) return;
+
+    if (nuevaVista === 'credencial' && this.escaneando()) {
+      await this.detenerCamara();
+    }
+    this.vistaActiva.set(nuevaVista);
+  }
+
+  async iniciarCamara(): Promise<void> {
+    this.estadoMensaje.set('');
+    this.estadoTipo.set('');
+
+    try {
+      this.html5Qr = new Html5Qrcode('qr-reader');
+      this.escaneando.set(true);
+
+      await this.html5Qr.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 220, height: 220 } },
+        async (textoLeido) => {
+          if (this.procesando) return;
+          this.procesando = true;
+
+          const resultado = await this.consultorio.validarYAbrirPuertaQr(textoLeido);
+          this.estadoTipo.set(resultado.ok ? 'ok' : 'err');
+          this.estadoMensaje.set(resultado.mensaje);
+
+          setTimeout(() => {
+            this.procesando = false;
+          }, 3000);
+        },
+        () => {}
+      );
+    } catch {
+      this.escaneando.set(false);
+      this.estadoTipo.set('err');
+      this.estadoMensaje.set('No se pudo acceder a la cÃ¡mara. Verifica los permisos del navegador.');
+    }
+  }
+
+  async detenerCamara(): Promise<void> {
+    if (this.html5Qr && this.escaneando()) {
+      try {
+        await this.html5Qr.stop();
+        this.html5Qr.clear();
+      } catch {}
+    }
+    this.escaneando.set(false);
+  }
+
+  ngOnDestroy(): void {
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+    this.detenerCamara();
+  }
+}
+
+
+========================================
+ARCHIVO: src\app\pages\sala\sala.page.ts
+========================================
+import { DatePipe } from '@angular/common';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import {
+  IonButton,
+  IonButtons,
+  IonContent,
+  IonHeader,
+  IonIcon,
+  IonTitle,
+  IonToolbar,
+} from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import {
+  barChartOutline,
+  downloadOutline,
+  logOutOutline,
+  peopleOutline,
+  powerOutline,
+  shieldCheckmarkOutline,
+} from 'ionicons/icons';
+import { environment } from '../../../environments/environment';
+import { MapaAsientosComponent } from '../../components/mapa-asientos/mapa-asientos.component';
+import { AuthService } from '../../core/services/auth.service';
+import { ConsultorioService, RangoEstadistica } from '../../core/services/consultorio.service';
+
+@Component({
+  selector: 'app-sala',
+  standalone: true,
+  imports: [
+    DatePipe,
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonButtons,
+    IonButton,
+    IonIcon,
+    IonContent,
+    MapaAsientosComponent,
+  ],
+  template: `
+    <ion-header class="ion-no-border">
+      <ion-toolbar style="--background: #B01E53; --color: #FFFFFF;">
+        <ion-title>Dentissa â€¢ Sala de Espera</ion-title>
+        <ion-buttons slot="end">
+          <div class="esp-status-pill" [class.esp-online]="consultorio.esp32EnLinea()">
+            <span class="dot"></span>
+            <span>{{ consultorio.esp32EnLinea() ? 'ESP32 En LÃ­nea' : 'ESP32 Desconectado' }}</span>
+          </div>
+          <ion-button (click)="salir()" title="Cerrar sesiÃ³n">
+            <ion-icon slot="icon-only" name="log-out-outline"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+
+    <ion-content class="sala-content">
+      <div class="main-container">
+        <!-- TARJETA SUPERIOR: USUARIO Y KPIS -->
+        <div class="card-box user-hero-tint">
+          <div class="top-user-row">
+            <div class="user-profile-left">
+              @if (fotoPerfilUrl() && !fotoError()) {
+                <img
+                  [src]="fotoPerfilUrl()"
+                  alt="Foto de perfil"
+                  class="avatar-img"
+                  (error)="fotoError.set(true)"
+                />
+              } @else {
+                <div class="avatar-circle">{{ inicialesUsuario() }}</div>
+              }
+              <div>
+                <div class="user-name">{{ auth.usuarioActual()?.nombre || 'Personal Dentissa' }}</div>
+                <div class="badges-row">
+                  <div class="role-chip">
+                    <ion-icon name="shield-checkmark-outline"></ion-icon>
+                    <span>{{ etiquetaRol() }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="aforo-badge">
+              <ion-icon name="people-outline"></ion-icon>
+              <span>{{ consultorio.aforoActual() }}/{{ consultorio.capacidadMaxima }}</span>
+            </div>
+          </div>
+
+          <div class="kpi-grid">
+            <div class="kpi-item">
+              <div class="kpi-val">{{ ventiladoresActivos() }}/4</div>
+              <div class="kpi-lbl">Ventiladores Activos</div>
+            </div>
+            <div class="kpi-item">
+              <div class="kpi-val">{{ consultorio.citasAtendidasHoy() }}</div>
+              <div class="kpi-lbl">Accesos QR Hoy</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VISTA 1: SALA DE ESPERA -->
+        @if (vistaActiva() === 'plano') {
+          <div class="card-box">
+            <div class="card-header-flex">
+              <div class="card-title">Sala de Espera</div>
+              <button
+                type="button"
+                class="reset-auto-btn"
+                [disabled]="!hayAlgoEncendido()"
+                [style.opacity]="hayAlgoEncendido() ? '1' : '0.45'"
+                (click)="consultorio.apagarTodo()"
+              >
+                <ion-icon name="power-outline"></ion-icon>
+                Apagar todo
+              </button>
+            </div>
+            <app-mapa-asientos></app-mapa-asientos>
+          </div>
+        }
+
+        <!-- VISTA 2: ESTADÃSTICAS -->
+        @if (vistaActiva() === 'stats') {
+          <div class="card-box">
+            <div class="card-header-flex">
+              <div class="card-title">
+                <ion-icon name="bar-chart-outline"></ion-icon>
+                MÃ©tricas de OcupaciÃ³n ({{ etiquetaPeriodo() }})
+              </div>
+              <button type="button" class="reset-auto-btn" (click)="exportarEstadisticasCsv()">
+                <ion-icon name="download-outline"></ion-icon>
+                Exportar CSV
+              </button>
+            </div>
+
+            <div class="periodo-bar">
+              <button
+                type="button"
+                class="p-btn"
+                [class.p-sel]="consultorio.rangoEstadistica() === 'hoy'"
+                (click)="seleccionarPeriodo('hoy')"
+              >Hoy</button>
+              <button
+                type="button"
+                class="p-btn"
+                [class.p-sel]="consultorio.rangoEstadistica() === 'semana'"
+                (click)="seleccionarPeriodo('semana')"
+              >Semana</button>
+              <button
+                type="button"
+                class="p-btn"
+                [class.p-sel]="consultorio.rangoEstadistica() === 'mes'"
+                (click)="seleccionarPeriodo('mes')"
+              >Mes</button>
+              <button
+                type="button"
+                class="p-btn"
+                [class.p-sel]="consultorio.rangoEstadistica() === 'anio'"
+                (click)="seleccionarPeriodo('anio')"
+              >AÃ±o</button>
+            </div>
+
+            @if (consultorio.rangoEstadistica() === 'mes' || consultorio.rangoEstadistica() === 'anio') {
+              <div class="fecha-filtros-row">
+                @if (consultorio.rangoEstadistica() === 'mes') {
+                  <label class="filtro-label">
+                    <span>Mes:</span>
+                    <select
+                      class="filtro-select"
+                      [value]="consultorio.mesSeleccionado()"
+                      (change)="onCambiarMes($event)"
+                    >
+                      @for (m of mesesLista; track m.valor) {
+                        <option [value]="m.valor" [selected]="m.valor === consultorio.mesSeleccionado()">
+                          {{ m.nombre }}
+                        </option>
+                      }
+                    </select>
+                  </label>
+                }
+
+                <label class="filtro-label">
+                  <span>AÃ±o:</span>
+                  <select
+                    class="filtro-select"
+                    [value]="consultorio.anioSeleccionado()"
+                    (change)="onCambiarAnio($event)"
+                  >
+                    @for (y of aniosLista; track y) {
+                      <option [value]="y" [selected]="y === consultorio.anioSeleccionado()">
+                        {{ y }}
+                      </option>
+                    }
+                  </select>
+                </label>
+              </div>
+            }
+
+            <div class="kpi-grid" style="margin-bottom: 14px;">
+              <div class="kpi-item">
+                <div class="kpi-val">{{ formatearDuracion(consultorio.resumenEstadisticas().promedioSegundos) }}</div>
+                <div class="kpi-lbl">Espera Promedio</div>
+              </div>
+              <div class="kpi-item">
+                <div class="kpi-val">{{ consultorio.resumenEstadisticas().asientoTop }}</div>
+                <div class="kpi-lbl">MÃ¡s Utilizada</div>
+              </div>
+              <div class="kpi-item">
+                <div class="kpi-val">{{ consultorio.resumenEstadisticas().totalSesiones }}</div>
+                <div class="kpi-lbl">Ocupaciones Sillas</div>
+              </div>
+              <div class="kpi-item">
+                <div class="kpi-val">{{ consultorio.resumenEstadisticas().entradasQr }}</div>
+                <div class="kpi-lbl">Entradas por QR</div>
+              </div>
+            </div>
+
+            @if (consultorio.resumenEstadisticas().demoraAlta) {
+              <div class="alerta-demora">
+                Tiempo promedio en sala superior a 15 minutos.
+              </div>
+            }
+
+            @for (st of consultorio.estadisticasAsientos(); track st.numero) {
+              <div class="stat-row">
+                <div class="stat-head">
+                  <span>
+                    Asiento #{{ st.numero }} ({{ st.hilera }})
+                    @if (st.ocupadoAhora && consultorio.rangoEstadistica() === 'hoy') {
+                      <span class="live-badge">EN USO</span>
+                    }
+                  </span>
+                  <span>
+                    {{ st.vecesUsado }} {{ st.vecesUsado === 1 ? 'uso' : 'usos' }} â€¢
+                    <strong>{{ formatearDuracion(st.tiempoTotalSegundos) }}</strong> ({{ st.porcentajeUso }}%)
+                  </span>
+                </div>
+                <div class="bar-bg">
+                  <div class="bar-fill" [style.width.%]="st.porcentajeUso"></div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- VISTA 3: AUDITORÃA -->
+        @if (vistaActiva() === 'auditoria') {
+          <div class="card-box">
+            <div class="card-title" style="margin-bottom: 10px;">BitÃ¡cora de Eventos IoT</div>
+            @if (consultorio.auditoria().length === 0) {
+              <div class="empty-msg">Sin movimientos registrados aÃºn en este turno.</div>
+            }
+            @for (log of consultorio.auditoria(); track log.id) {
+              <div class="log-row">
+                <div class="log-top">
+                  <span class="log-disp">{{ log.dispositivo }}</span>
+                  <span class="log-time">{{ log.fechaHora | date: 'HH:mm:ss' }}</span>
+                </div>
+                <div class="log-acc">{{ log.accion }}</div>
+                <div class="log-user">{{ log.usuarioNombre }} ({{ log.origen }})</div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </ion-content>
+  `,
+  styles: [
+    `
+      .sala-content {
+        --background: #F9F7F4;
+        --padding-start: 14px;
+        --padding-end: 14px;
+        --padding-top: 14px;
+        --padding-bottom: 24px;
+      }
+      .main-container {
+        max-width: 960px;
+        margin: 0 auto;
+      }
+      .esp-status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: #FDECEA;
+        border: 1px solid #F5C6C2;
+        color: #D32F2F;
+        font-size: 0.72rem;
+        font-weight: 700;
+        margin-right: 4px;
+      }
+      .esp-status-pill .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #D32F2F;
+      }
+      .esp-status-pill.esp-online {
+        background: #E8F5E9;
+        border: 1px solid #C8E6C9;
+        color: #2E7D32;
+      }
+      .esp-status-pill.esp-online .dot {
+        background: #43A047;
+        box-shadow: none;
+      }
+      .card-box {
+        background: #FFFFFF;
+        border: 1px solid #EFEBE9;
+        border-radius: 16px;
+        padding: 16px;
+        box-shadow: 0 2px 10px rgba(30, 30, 30, 0.03);
+        margin-bottom: 14px;
+      }
+      .user-hero-tint {
+        background: #FFFFFF;
+        border: 1px solid #EFEBE9;
+      }
+      .card-header-flex {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+      .card-title {
+        font-size: 0.94rem;
+        font-weight: 800;
+        color: #1E1E1E;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .reset-auto-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: #FDECEA;
+        border: 1px solid #F5C6C2;
+        color: #D32F2F;
+        font-size: 0.72rem;
+        font-weight: 800;
+        padding: 5px 11px;
+        border-radius: 9px;
+        cursor: pointer;
+      }
+      .top-user-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      .user-profile-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .avatar-circle {
+        width: 46px;
+        height: 46px;
+        border-radius: 12px;
+        background: #B01E53;
+        color: #FFFFFF;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.94rem;
+        font-weight: 800;
+        flex-shrink: 0;
+      }
+      .avatar-img {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        object-fit: cover;
+        border: 1px solid #ead4d8;
+        flex-shrink: 0;
+      }
+      .user-name {
+        font-size: 0.96rem;
+        font-weight: 800;
+        color: #1E1E1E;
+      }
+      .badges-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 4px;
+      }
+      .role-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 8px;
+        border-radius: 6px;
+        background: #F7E6EA;
+        color: #B01E53;
+        font-size: 0.66rem;
+        font-weight: 800;
+      }
+      .aforo-badge {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        background: #F7E6EA;
+        border: 1px solid #e5b8c6;
+        color: #B01E53;
+        padding: 6px 12px;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        font-weight: 800;
+        flex-shrink: 0;
+      }
+      .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+        gap: 8px;
+      }
+      .kpi-item {
+        background: #F7E6EA;
+        border: 1px solid #EED5DC;
+        border-radius: 12px;
+        padding: 10px 8px;
+        text-align: center;
+      }
+      .kpi-val {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #B01E53;
+      }
+      .kpi-lbl {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: #6f5c60;
+      }
+      .periodo-bar {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+        margin-bottom: 10px;
+      }
+      .p-btn {
+        padding: 7px 6px;
+        border-radius: 9px;
+        border: 1px solid #d9b6bd;
+        background: #ffffff;
+        color: #6f5c60;
+        font-size: 0.74rem;
+        font-weight: 800;
+        cursor: pointer;
+      }
+      .p-btn.p-sel {
+        background: #B01E53;
+        border-color: #B01E53;
+        color: #ffffff;
+      }
+      .fecha-filtros-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 12px;
+        padding: 8px 10px;
+        background: #ffffff;
+        border: 1px solid #ead4d8;
+        border-radius: 10px;
+      }
+      .filtro-label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.75rem;
+        font-weight: 800;
+        color: #6f5c60;
+        flex: 1;
+        min-width: 130px;
+      }
+      .filtro-select {
+        flex: 1;
+        padding: 6px 8px;
+        border-radius: 8px;
+        border: 1px solid #d9b6bd;
+        background: #ffffff;
+        color: #1E1E1E;
+        font-size: 0.76rem;
+        font-weight: 700;
+        outline: none;
+      }
+      .stat-row {
+        margin-bottom: 10px;
+      }
+      .stat-head {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #1E1E1E;
+        margin-bottom: 4px;
+      }
+      .live-badge {
+        display: inline-block;
+        margin-left: 6px;
+        padding: 1px 6px;
+        border-radius: 6px;
+        background: #e6f9ee;
+        color: #167940;
+        font-size: 0.64rem;
+        font-weight: 800;
+      }
+      .alerta-demora {
+        background: #fff3cd;
+        border: 1px solid #ffe69c;
+        color: #856404;
+        padding: 8px 10px;
+        border-radius: 9px;
+        font-size: 0.74rem;
+        font-weight: 700;
+        margin-bottom: 12px;
+        text-align: center;
+      }
+      .bar-bg {
+        height: 9px;
+        background: #f3e2e5;
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      .bar-fill {
+        height: 100%;
+        background: #B01E53;
+        border-radius: 6px;
+      }
+      .empty-msg {
+        font-size: 0.78rem;
+        color: #7d686c;
+        text-align: center;
+        padding: 12px 0;
+      }
+      .log-row {
+        padding: 8px 0;
+        border-bottom: 1px solid #f2e2e5;
+      }
+      .log-row:last-child {
+        border-bottom: none;
+      }
+      .log-top {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.78rem;
+        font-weight: 800;
+        color: #1E1E1E;
+      }
+      .log-time {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: #B01E53;
+      }
+      .log-acc {
+        font-size: 0.74rem;
+        color: #1E1E1E;
+        margin-top: 2px;
+      }
+      .log-user {
+        font-size: 0.68rem;
+        font-weight: 600;
+        color: #6f5c60;
+        margin-top: 2px;
+      }
+    `,
+  ],
+})
+export class SalaPage implements OnInit {
+  auth = inject(AuthService);
+  consultorio = inject(ConsultorioService);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+
+  vistaActiva = signal<'plano' | 'stats' | 'auditoria'>('plano');
+  fotoError = signal<boolean>(false);
+
+  readonly mesesLista = [
+    { valor: 1, nombre: 'Enero' },
+    { valor: 2, nombre: 'Febrero' },
+    { valor: 3, nombre: 'Marzo' },
+    { valor: 4, nombre: 'Abril' },
+    { valor: 5, nombre: 'Mayo' },
+    { valor: 6, nombre: 'Junio' },
+    { valor: 7, nombre: 'Julio' },
+    { valor: 8, nombre: 'Agosto' },
+    { valor: 9, nombre: 'Septiembre' },
+    { valor: 10, nombre: 'Octubre' },
+    { valor: 11, nombre: 'Noviembre' },
+    { valor: 12, nombre: 'Diciembre' },
+  ];
+
+  readonly aniosLista: number[] = (() => {
+    const actual = new Date().getFullYear();
+    return [actual, actual - 1, actual - 2, actual - 3];
+  })();
+
+  ventiladoresActivos = computed(
+    () => this.consultorio.ventiladores().filter((v) => v.encendido).length
+  );
+
+  hayAlgoEncendido = computed(
+    () => this.consultorio.luces().encendido || this.ventiladoresActivos() > 0
+  );
+
+  fotoPerfilUrl = computed(() => {
+    const foto = (this.auth.usuarioActual() as any)?.foto_perfil;
+    if (!foto || typeof foto !== 'string') return '';
+    const limpio = foto.trim();
+    if (!limpio || limpio.startsWith('profile-photos/')) return '';
+    if (limpio.startsWith('http://') || limpio.startsWith('https://') || limpio.startsWith('data:')) {
+      return limpio;
+    }
+    const base = environment.apiUrl.replace(/\/api\/?$/, '');
+    const ruta = limpio.startsWith('/') ? limpio : `/storage/${limpio.replace(/^storage\//, '')}`;
+    return `${base}${ruta}`;
+  });
+
+  inicialesUsuario = computed(() => {
+    const nombre = this.auth.usuarioActual()?.nombre || 'ML';
+    const partes = nombre.trim().split(/\s+/);
+    return partes
+      .slice(0, 2)
+      .map((p) => p[0]?.toUpperCase() || '')
+      .join('');
+  });
+
+  etiquetaRol = computed(() => {
+    const u = this.auth.usuarioActual();
+    if (u?.rol_etiqueta) return u.rol_etiqueta;
+    if (u?.rol === 'super_admin') return 'Doctora titular';
+    if (u?.rol === 'doctor') return 'Doctor';
+    if (u?.rol === 'asistente') return 'Asistente';
+    return 'Personal Autorizado';
+  });
+
+  constructor() {
+    addIcons({
+      logOutOutline,
+      peopleOutline,
+      powerOutline,
+      barChartOutline,
+      downloadOutline,
+      shieldCheckmarkOutline,
+    });
+  }
+
+  ngOnInit(): void {
+    this.route.data.subscribe((data) => {
+      if (data['vista']) {
+        this.vistaActiva.set(data['vista']);
+      }
+    });
+  }
+
+  seleccionarPeriodo(rango: RangoEstadistica): void {
+    this.consultorio.cambiarRangoEstadisticas(rango);
+  }
+
+  onCambiarMes(ev: Event): void {
+    const mes = Number((ev.target as HTMLSelectElement).value);
+    this.consultorio.cambiarMesAnioEstadisticas(mes, this.consultorio.anioSeleccionado());
+  }
+
+  onCambiarAnio(ev: Event): void {
+    const anio = Number((ev.target as HTMLSelectElement).value);
+    this.consultorio.cambiarMesAnioEstadisticas(this.consultorio.mesSeleccionado(), anio);
+  }
+
+  etiquetaPeriodo(): string {
+    const r = this.consultorio.rangoEstadistica();
+    const anio = this.consultorio.anioSeleccionado();
+    if (r === 'semana') return 'Ãšltimos 7 dÃ­as';
+    if (r === 'mes') {
+      const m = this.mesesLista.find((x) => x.valor === this.consultorio.mesSeleccionado())?.nombre || '';
+      return `${m} ${anio}`;
+    }
+    if (r === 'anio') return `AÃ±o ${anio}`;
+    return 'Hoy';
+  }
+
+  formatearDuracion(segundos: number): string {
+    if (!segundos || segundos <= 0) return '0s';
+    const mins = Math.floor(segundos / 60);
+    const segs = segundos % 60;
+    if (mins === 0) return `${segs}s`;
+    return `${mins}m ${segs}s`;
+  }
+
+  exportarEstadisticasCsv(): void {
+    const r = this.consultorio.rangoEstadistica();
+    const sufijo =
+      r === 'mes'
+        ? `mes-${this.consultorio.mesSeleccionado()}-${this.consultorio.anioSeleccionado()}`
+        : r === 'anio'
+          ? `anio-${this.consultorio.anioSeleccionado()}`
+          : `${r}-${new Date().toISOString().slice(0, 10)}`;
+
+    const filas = [
+      ['Asiento', 'Hilera', 'Veces Usado', 'Tiempo Total (seg)', 'Porcentaje Uso (%)'],
+      ...this.consultorio.estadisticasAsientos().map((s) => [
+        `Silla #${s.numero}`,
+        s.hilera,
+        s.vecesUsado,
+        s.tiempoTotalSegundos,
+        `${s.porcentajeUso}%`,
+      ]),
+    ];
+    const csv = filas.map((f) => f.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `estadisticas-${sufijo}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  salir(): void {
+    this.auth.cerrarSesion();
+    this.router.navigateByUrl('/login');
+  }
+}
+
+
+========================================
+ARCHIVO: src\app\pages\tabs\tabs.page.ts
+========================================
+import { Component, inject } from '@angular/core';
+import {
+  IonIcon,
+  IonLabel,
+  IonTabBar,
+  IonTabButton,
+  IonTabs,
+} from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import {
+  barChartOutline,
+  documentTextOutline,
+  gridOutline,
+  qrCodeOutline,
+} from 'ionicons/icons';
+import { AuthService } from '../../core/services/auth.service';
+import { ConsultorioService } from '../../core/services/consultorio.service';
+
+@Component({
+  selector: 'app-tabs',
+  standalone: true,
+  imports: [IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel],
+  template: `
+    <ion-tabs>
+      <ion-tab-bar slot="bottom" style="--background: #FFFFFF; --border: 1px solid #EFEBE9; --color: #A0A0A0; --color-selected: #B01E53;">
+        <ion-tab-button tab="sala" href="/tabs/sala">
+          <ion-icon name="grid-outline"></ion-icon>
+          <ion-label>Sala &amp; IoT</ion-label>
+        </ion-tab-button>
+
+        <ion-tab-button tab="qr" href="/tabs/qr">
+          <ion-icon name="qr-code-outline"></ion-icon>
+          <ion-label>Acceso QR</ion-label>
+        </ion-tab-button>
+
+        @if (auth.esSuperAdmin() && consultorio.historialDisponible()) {
+          <ion-tab-button tab="estadisticas" href="/tabs/estadisticas">
+            <ion-icon name="bar-chart-outline"></ion-icon>
+            <ion-label>EstadÃ­sticas</ion-label>
+          </ion-tab-button>
+
+          <ion-tab-button tab="auditoria" href="/tabs/auditoria">
+            <ion-icon name="document-text-outline"></ion-icon>
+            <ion-label>AuditorÃ­a</ion-label>
+          </ion-tab-button>
+        }
+      </ion-tab-bar>
+    </ion-tabs>
+  `,
+})
+export class TabsPage {
+  readonly auth = inject(AuthService);
+  readonly consultorio = inject(ConsultorioService);
+
+  constructor() {
+    addIcons({
+      gridOutline,
+      qrCodeOutline,
+      barChartOutline,
+      documentTextOutline,
+    });
+  }
+}
+
+
+========================================
+ARCHIVO: src\app\tabs\tabs.page.html
+========================================
+<ion-tabs>
+  <ion-tab-bar slot="bottom">
+    <ion-tab-button tab="dashboard" href="/tabs/dashboard">
+      <ion-icon aria-hidden="true" name="easel-outline"></ion-icon>
+      <ion-label>Sala</ion-label>
+    </ion-tab-button>
+
+    <ion-tab-button tab="acceso-qr" href="/tabs/acceso-qr">
+      <ion-icon aria-hidden="true" name="qr-code-outline"></ion-icon>
+      <ion-label>Acceso QR</ion-label>
+    </ion-tab-button>
+
+    <ion-tab-button tab="control-manual" href="/tabs/control-manual">
+      <ion-icon aria-hidden="true" name="options-outline"></ion-icon>
+      <ion-label>Control</ion-label>
+    </ion-tab-button>
+
+    <ion-tab-button tab="auditoria" href="/tabs/auditoria">
+      <ion-icon aria-hidden="true" name="bar-chart-outline"></ion-icon>
+      <ion-label>Auditoría</ion-label>
+    </ion-tab-button>
+  </ion-tab-bar>
+</ion-tabs>
+
+
+
+========================================
+ARCHIVO: src\app\tabs\tabs.page.scss
+========================================
+
+
+
+
+========================================
+ARCHIVO: src\app\tabs\tabs.page.spec.ts
+========================================
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+
+import { TabsPage } from './tabs.page';
+
+describe('TabsPage', () => {
+  let component: TabsPage;
+  let fixture: ComponentFixture<TabsPage>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [TabsPage],
+      providers: [provideRouter([])],
+    }).compileComponents();
+  });
+
+  beforeEach(() => {
+    fixture = TestBed.createComponent(TabsPage);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+});
+
+
+
+========================================
+ARCHIVO: src\app\tabs\tabs.page.ts
+========================================
+import { Component, EnvironmentInjector, inject } from '@angular/core';
+import { IonIcon, IonLabel, IonTabBar, IonTabButton, IonTabs } from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { barChartOutline, easelOutline, optionsOutline, qrCodeOutline } from 'ionicons/icons';
+
+@Component({
+  selector: 'app-tabs',
+  templateUrl: 'tabs.page.html',
+  styleUrls: ['tabs.page.scss'],
+  standalone: true,
+  imports: [IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel],
+})
+export class TabsPage {
+  public environmentInjector = inject(EnvironmentInjector);
+
+  constructor() {
+    addIcons({ easelOutline, qrCodeOutline, optionsOutline, barChartOutline });
+  }
+}
+
+
+
+========================================
+ARCHIVO: src\app\tabs\tabs.routes.ts
+========================================
+import { Routes } from '@angular/router';
+import { TabsPage } from './tabs.page';
+
+export const routes: Routes = [
+  {
+    path: '',
+    component: TabsPage,
+    children: [
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('../pages/dashboard/dashboard.page').then(
+            (m) => m.DashboardPage
+          ),
+      },
+      {
+        path: 'acceso-qr',
+        loadComponent: () =>
+          import('../pages/acceso-qr/acceso-qr.page').then(
+            (m) => m.AccesoQrPage
+          ),
+      },
+      {
+        path: 'control-manual',
+        loadComponent: () =>
+          import('../pages/control-manual/control-manual.page').then(
+            (m) => m.ControlManualPage
+          ),
+      },
+      {
+        path: 'auditoria',
+        loadComponent: () =>
+          import('../pages/auditoria/auditoria.page').then(
+            (m) => m.AuditoriaPage
+          ),
+      },
+      {
+        path: '',
+        redirectTo: '/tabs/dashboard',
+        pathMatch: 'full',
+      },
+    ],
+  },
+];
+
+
+
+========================================
+ARCHIVO: src\environments\environment.prod.ts
+========================================
+export const environment = {
+  production: true,
+  apiUrl: 'https://dentissa-production-11db.up.railway.app/api',
+};
+
+
+
+========================================
+ARCHIVO: src\environments\environment.ts
+========================================
+export const environment = {
+  production: false,
+  apiUrl: 'https://dentissa-production-11db.up.railway.app/api',
+};
+
+
+
+========================================
+ARCHIVO: src\theme\variables.scss
+========================================
+:root {
+  --ion-background-color: #fdf7f6;
+  --ion-background-color-rgb: 253, 247, 246;
+
+  --ion-text-color: #261c1e;
+  --ion-text-color-rgb: 38, 28, 30;
+
+  --ion-card-background: #ffffff;
+  --ion-item-background: #ffffff;
+  --ion-toolbar-background: #a83256;
+  --ion-toolbar-color: #ffffff;
+  --ion-tab-bar-background: #ffffff;
+  --ion-tab-bar-color: #6e5c60;
+  --ion-tab-bar-color-selected: #a83256;
+
+  --ion-color-primary: #a83256;
+  --ion-color-primary-rgb: 168, 50, 86;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #8f2847;
+  --ion-color-primary-tint: #b54768;
+
+  --ion-color-secondary: #c46b7c;
+  --ion-color-secondary-rgb: 196, 107, 124;
+  --ion-color-secondary-contrast: #ffffff;
+  --ion-color-secondary-contrast-rgb: 255, 255, 255;
+  --ion-color-secondary-shade: #ac5e6d;
+  --ion-color-secondary-tint: #ca7a89;
+
+  --ion-color-tertiary: #b87d6b;
+  --ion-color-tertiary-rgb: 184, 125, 107;
+  --ion-color-tertiary-contrast: #ffffff;
+  --ion-color-tertiary-contrast-rgb: 255, 255, 255;
+  --ion-color-tertiary-shade: #a26e5e;
+  --ion-color-tertiary-tint: #bf8a7a;
+
+  --ion-color-success: #1b7a4b;
+  --ion-color-success-rgb: 27, 122, 75;
+  --ion-color-success-contrast: #ffffff;
+  --ion-color-success-contrast-rgb: 255, 255, 255;
+  --ion-color-success-shade: #16663e;
+  --ion-color-success-tint: #32875d;
+
+  --ion-color-warning: #c87d12;
+  --ion-color-warning-rgb: 200, 125, 18;
+  --ion-color-warning-contrast: #ffffff;
+  --ion-color-warning-contrast-rgb: 255, 255, 255;
+  --ion-color-warning-shade: #b06e10;
+  --ion-color-warning-tint: #ce8a2a;
+
+  --ion-color-danger: #c42b45;
+  --ion-color-danger-rgb: 196, 43, 69;
+  --ion-color-danger-contrast: #ffffff;
+  --ion-color-danger-contrast-rgb: 255, 255, 255;
+  --ion-color-danger-shade: #ac263d;
+  --ion-color-danger-tint: #ca4058;
+
+  --ion-color-dark: #261c1e;
+  --ion-color-dark-rgb: 38, 28, 30;
+  --ion-color-dark-contrast: #ffffff;
+  --ion-color-dark-contrast-rgb: 255, 255, 255;
+  --ion-color-dark-shade: #1f1618;
+  --ion-color-dark-tint: #3c3335;
+
+  --ion-color-medium: #5c4d50;
+  --ion-color-medium-rgb: 92, 77, 80;
+  --ion-color-medium-contrast: #ffffff;
+  --ion-color-medium-contrast-rgb: 255, 255, 255;
+  --ion-color-medium-shade: #514446;
+  --ion-color-medium-tint: #6c5f62;
+
+  --ion-color-light: #f6eaec;
+  --ion-color-light-rgb: 246, 234, 236;
+  --ion-color-light-contrast: #261c1e;
+  --ion-color-light-contrast-rgb: 38, 28, 30;
+  --ion-color-light-shade: #d8cecf;
+  --ion-color-light-tint: #f7ecee;
+}
+
+
