@@ -18,8 +18,12 @@ const ETIQUETAS_ROL: Record<RolUsuario, string> = {
 })
 export class AuthService {
   private readonly STORAGE_KEY = 'dentissa_sesion_v1';
+  // Token de la API (26/11/2026): el servidor lo exige en cada petición.
+  private readonly TOKEN_KEY = 'dentissa_token_v1';
   private readonly API_LOGIN_URL = `${environment.apiUrl}/app/login`;
+  private readonly API_LOGOUT_URL = `${environment.apiUrl}/app/logout`;
 
+  readonly token = signal<string | null>(localStorage.getItem(this.TOKEN_KEY) || null);
   readonly usuarioActual = signal<UsuarioSesion | null>(this.cargarSesionGuardada());
   readonly esSuperAdmin = computed(() => this.usuarioActual()?.rol === 'super_admin');
   readonly esDoctor = computed(() => this.usuarioActual()?.rol === 'doctor');
@@ -36,7 +40,9 @@ export class AuthService {
   private cargarSesionGuardada(): UsuarioSesion | null {
     try {
       const raw = localStorage.getItem(this.STORAGE_KEY);
-      if (!raw) return null;
+      // Una sesión guardada antes de esta versión (sin la llave del token) ya no
+      // sirve: hay que entrar de nuevo. La llave vacía significa «servidor sin token».
+      if (!raw || localStorage.getItem(this.TOKEN_KEY) === null) return null;
       const parsed = JSON.parse(raw) as UsuarioSesion;
       const rolNormalizado = this.normalizarRol(parsed.rol);
       if (!rolNormalizado) return null;
@@ -113,6 +119,11 @@ export class AuthService {
         foto_perfil: u.foto_perfil ?? null,
       };
 
+      // Un servidor anterior al 26/11/2026 no entrega token: se entra igual y las
+      // peticiones van sin él (así la app puede publicarse antes que la API).
+      const token: string = data.token || '';
+      this.token.set(token || null);
+      localStorage.setItem(this.TOKEN_KEY, token);
       this.usuarioActual.set(sesion);
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(sesion));
       return { ok: true };
@@ -124,8 +135,21 @@ export class AuthService {
     }
   }
 
-  cerrarSesion(): void {
+  /**
+   * Cierra la sesión. Con avisarServidor (por omisión) también invalida el token
+   * en Dentissa; el interceptor lo omite cuando el servidor ya lo rechazó (401).
+   */
+  cerrarSesion(avisarServidor = true): void {
+    const token = this.token();
+    if (avisarServidor && token) {
+      fetch(this.API_LOGOUT_URL, {
+        method: 'POST',
+        headers: { Accept: 'application/json', Authorization: `Bearer ${token}` },
+      }).catch(() => {});
+    }
+    this.token.set(null);
     this.usuarioActual.set(null);
+    localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.STORAGE_KEY);
   }
 }
